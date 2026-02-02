@@ -1,0 +1,1628 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>UPS System Simulator</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+
+        header {
+            background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        .warning-banner {
+            background: #ff4444;
+            color: white;
+            padding: 15px 30px;
+            display: none;
+            font-weight: bold;
+        }
+
+        .warning-banner.active {
+            display: block;
+        }
+
+        .warning-item {
+            padding: 5px 0;
+            border-bottom: 1px solid rgba(255,255,255,0.3);
+        }
+
+        .warning-item:last-child {
+            border-bottom: none;
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 350px 1fr;
+            gap: 20px;
+            padding: 20px;
+        }
+
+        .control-panel {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            height: fit-content;
+        }
+
+        .control-section {
+            margin-bottom: 25px;
+        }
+
+        .control-section h3 {
+            color: #2c3e50;
+            margin-bottom: 15px;
+            font-size: 1.1em;
+            border-bottom: 2px solid #667eea;
+            padding-bottom: 5px;
+        }
+
+        .input-group {
+            margin-bottom: 12px;
+        }
+
+        .input-group label {
+            display: block;
+            font-size: 0.9em;
+            color: #555;
+            margin-bottom: 5px;
+            font-weight: 500;
+        }
+
+        .input-group input {
+            width: 100%;
+            padding: 8px 12px;
+            border: 2px solid #ddd;
+            border-radius: 4px;
+            font-size: 0.95em;
+            transition: border-color 0.3s;
+        }
+
+        .input-group input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .input-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+
+        .mode-selector {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .mode-btn {
+            padding: 12px;
+            border: 2px solid #667eea;
+            background: white;
+            color: #667eea;
+            border-radius: 6px;
+            font-size: 0.95em;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .mode-btn:hover {
+            background: #f0f0ff;
+        }
+
+        .mode-btn.active {
+            background: #667eea;
+            color: white;
+        }
+
+        .visualization-area {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .canvas-container {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 20px;
+        }
+
+        .canvas-container h2 {
+            color: #2c3e50;
+            margin-bottom: 15px;
+            font-size: 1.3em;
+        }
+
+        canvas {
+            display: block;
+            width: 100%;
+            background: white;
+            border-radius: 6px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        #diagramCanvas {
+            height: 500px;
+        }
+
+        #graphCanvas {
+            height: 400px;
+        }
+
+        .dashboard {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 20px;
+        }
+
+        .dashboard h2 {
+            color: #2c3e50;
+            margin-bottom: 15px;
+            font-size: 1.3em;
+        }
+
+        .data-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 15px;
+        }
+
+        .data-card {
+            background: white;
+            border-radius: 6px;
+            padding: 15px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            border-left: 4px solid #667eea;
+        }
+
+        .data-card h4 {
+            color: #2c3e50;
+            margin-bottom: 10px;
+            font-size: 1em;
+        }
+
+        .data-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 6px 0;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .data-row:last-child {
+            border-bottom: none;
+        }
+
+        .data-label {
+            color: #666;
+            font-size: 0.9em;
+        }
+
+        .data-value {
+            font-weight: bold;
+            color: #2c3e50;
+            font-size: 0.95em;
+        }
+
+        .data-formula {
+            font-size: 0.75em;
+            color: #7f8c8d;
+            font-style: italic;
+            margin-top: 2px;
+            display: block;
+        }
+
+        #graphCanvas {
+            cursor: crosshair;
+        }
+
+        @media (max-width: 1200px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>⚡ UPS System Simulator</h1>
+            <p>Comprehensive Energy Flow Analysis with Battery Runtime Prediction</p>
+        </header>
+
+        <div class="warning-banner" id="warningBanner"></div>
+
+        <div class="main-content">
+            <!-- Control Panel -->
+            <div class="control-panel">
+                <div class="control-section">
+                    <h3>Power & Load</h3>
+                    <div class="input-group">
+                        <label>Grid Input Voltage (V)</label>
+                        <input type="number" id="gridVoltage" value="115" step="1">
+                    </div>
+                    <div class="input-group">
+                        <label>Target Output Power (W)</label>
+                        <input type="number" id="loadPower" value="1000" step="10" min="10">
+                    </div>
+                    <div class="input-group">
+                        <label>Output Voltage (V)</label>
+                        <input type="number" id="outputVoltage" value="115" step="1" min="50">
+                    </div>
+                    <div class="input-group">
+                        <label>Output VA Rating</label>
+                        <input type="number" id="outputVA" value="1200" step="10" min="100">
+                    </div>
+                    <div class="input-group">
+                        <label style="display: flex; align-items: center; gap: 8px;">
+                            <input type="checkbox" id="reactiveLoadEnabled" style="width: auto;">
+                            <span>Enable Reactive Load (Max VA)</span>
+                        </label>
+                        <small style="color: #666; font-size: 0.85em; display: block; margin-top: 4px;">OFF: Resistive load at rated W | ON: Max reactive at VA rating</small>
+                    </div>
+                </div>
+
+                <div class="control-section">
+                    <h3>Transformer</h3>
+                    <div class="input-row">
+                        <div class="input-group">
+                            <label>Turns Ratio</label>
+                            <input type="number" id="turnsRatio" value="1.0" step="0.1">
+                        </div>
+                        <div class="input-group">
+                            <label>Efficiency (%)</label>
+                            <input type="number" id="transformerEff" value="95" step="0.1" min="0" max="100">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="control-section">
+                    <h3>Component Efficiencies (%)</h3>
+                    <div class="input-group">
+                        <label>PFC (Rectifier) Efficiency</label>
+                        <input type="number" id="pfcEff" value="92" step="0.1" min="0" max="100">
+                    </div>
+                    <div class="input-group">
+                        <label>Inverter Efficiency</label>
+                        <input type="number" id="inverterEff" value="90" step="0.1" min="0" max="100">
+                    </div>
+                    <div class="input-group">
+                        <label>Charger Efficiency</label>
+                        <input type="number" id="chargerEff" value="85" step="0.1" min="0" max="100">
+                    </div>
+                    <div class="input-group">
+                        <label>Charger Max Power (W)</label>
+                        <input type="number" id="chargerMaxPower" value="200" step="10" min="0">
+                    </div>
+                    <div class="input-group">
+                        <label>Boost Converter Efficiency</label>
+                        <input type="number" id="boostEff" value="88" step="0.1" min="0" max="100">
+                    </div>
+                </div>
+
+                <div class="control-section">
+                    <h3>Circuit Breakers</h3>
+                    <div class="input-row">
+                        <div class="input-group">
+                            <label>Input CB (A)</label>
+                            <input type="number" id="inputCB" value="50" step="1">
+                        </div>
+                        <div class="input-group">
+                            <label>Output CB (A)</label>
+                            <input type="number" id="outputCB" value="40" step="1">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="control-section">
+                    <h3>Battery Specifications</h3>
+                    <div class="input-row">
+                        <div class="input-group">
+                            <label>Cell Voltage (V)</label>
+                            <input type="number" id="cellVoltage" value="12" step="0.1">
+                        </div>
+                        <div class="input-group">
+                            <label>Min Cell V (V)</label>
+                            <input type="number" id="minCellVoltage" value="10.5" step="0.1">
+                        </div>
+                    </div>
+                    <div class="input-group">
+                        <label>End of Discharge Voltage (V)</label>
+                        <input type="number" id="endOfDischargeVoltage" value="105" step="0.1">
+                    </div>
+                    <div class="input-row">
+                        <div class="input-group">
+                            <label>Cell Capacity (Ah)</label>
+                            <input type="number" id="cellCapacity" value="10" step="1">
+                        </div>
+                        <div class="input-group">
+                            <label>Max Cell I (A)</label>
+                            <input type="number" id="maxCellCurrent" value="50" step="1">
+                        </div>
+                    </div>
+                    <div class="input-row">
+                        <div class="input-group">
+                            <label>Series Count (S)</label>
+                            <input type="number" id="seriesCount" value="10" step="1" min="1">
+                        </div>
+                        <div class="input-group">
+                            <label>Parallel Count (P)</label>
+                            <input type="number" id="parallelCount" value="1" step="1" min="1">
+                        </div>
+                    </div>
+                    <div class="input-group">
+                        <label>Peukert Coefficient (n)</label>
+                        <input type="number" id="peukertCoefficient" value="1.2" step="0.01" min="1.0" max="1.5">
+                        <small style="color: #666; font-size: 0.85em; display: block; margin-top: 4px;">Lead-acid: 1.1-1.3 | Lithium: ~1.0-1.05</small>
+                    </div>
+                </div>
+
+                <div class="control-section">
+                    <h3>Runtime Graph Scale</h3>
+                    <div class="input-row">
+                        <div class="input-group">
+                            <label>Start Load (W)</label>
+                            <input type="number" id="graphStartLoad" value="333" step="10" min="0">
+                        </div>
+                        <div class="input-group">
+                            <label>End Load (W)</label>
+                            <input type="number" id="graphEndLoad" value="1000" step="10" min="0">
+                        </div>
+                    </div>
+                    <small style="color: #666; font-size: 0.85em;">Note: 0 for End Load uses current system load</small>
+                </div>
+
+                <div class="control-section">
+                    <h3>Thermal Management</h3>
+                    <div class="input-row">
+                        <div class="input-group">
+                            <label>Ambient Temp (°C)</label>
+                            <input type="number" id="ambientTemp" value="25" step="1">
+                        </div>
+                        <div class="input-group">
+                            <label>Max Internal (°C)</label>
+                            <input type="number" id="maxInternalTemp" value="40" step="1">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="control-section">
+                    <h3>Input Conditions</h3>
+                    <div class="input-group">
+                        <label>Input Voltage Tolerance (%)</label>
+                        <input type="number" id="voltageTolerance" value="15" step="0.1" min="0" max="50">
+                    </div>
+                    <div class="input-group">
+                        <label style="display: flex; align-items: center; gap: 8px;">
+                            <input type="checkbox" id="lowLineMode" style="width: auto;">
+                            <span>Low Line Mode (Reduced Input Voltage)</span>
+                        </label>
+                    </div>
+                    <div class="input-group">
+                        <label>Overload (%)</label>
+                        <input type="number" id="overloadPercent" value="0" step="1" min="0" max="200">
+                    </div>
+                    <div class="input-group">
+                        <label style="display: flex; align-items: center; gap: 8px;">
+                            <input type="checkbox" id="overloadMode" style="width: auto;">
+                            <span>Enable Overload Condition</span>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="control-section">
+                    <h3>Operating Mode</h3>
+                    <div class="mode-selector">
+                        <button class="mode-btn active" data-mode="normal">Normal</button>
+                        <button class="mode-btn" data-mode="charging">Charging</button>
+                        <button class="mode-btn" data-mode="battery">Battery</button>
+                        <button class="mode-btn" data-mode="bypass">Bypass</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Visualization Area -->
+            <div class="visualization-area">
+                <!-- Block Diagram -->
+                <div class="canvas-container">
+                    <h2>System Block Diagram & Energy Flow</h2>
+                    <canvas id="diagramCanvas"></canvas>
+                </div>
+
+                <!-- Dashboard -->
+                <div class="dashboard">
+                    <h2>Real-Time Electrical Data</h2>
+                    <div class="data-grid">
+                        <div class="data-card">
+                            <h4>PFC Input (Post-Transformer)</h4>
+                            <div class="data-row">
+                                <span class="data-label">Voltage:
+                                    <span class="data-formula" id="pfcInputVoltageFormula"></span>
+                                </span>
+                                <span class="data-value" id="pfcInputVoltage">0 V</span>
+                            </div>
+                            <div class="data-row">
+                                <span class="data-label">Current:
+                                    <span class="data-formula" id="pfcInputCurrentFormula"></span>
+                                </span>
+                                <span class="data-value" id="pfcInputCurrent">0 A</span>
+                            </div>
+                            <div class="data-row">
+                                <span class="data-label">Power:
+                                    <span class="data-formula" id="pfcInputPowerFormula"></span>
+                                </span>
+                                <span class="data-value" id="pfcInputPower">0 W</span>
+                            </div>
+                        </div>
+
+                        <div class="data-card">
+                            <h4>DC Bus</h4>
+                            <div class="data-row">
+                                <span class="data-label">Voltage:
+                                    <span class="data-formula">Fixed at 400V</span>
+                                </span>
+                                <span class="data-value" id="dcBusVoltage">400 V</span>
+                            </div>
+                            <div class="data-row">
+                                <span class="data-label">Current:
+                                    <span class="data-formula" id="dcBusCurrentFormula"></span>
+                                </span>
+                                <span class="data-value" id="dcBusCurrent">0 A</span>
+                            </div>
+                            <div class="data-row">
+                                <span class="data-label">Power:
+                                    <span class="data-formula" id="dcBusPowerFormula"></span>
+                                </span>
+                                <span class="data-value" id="dcBusPower">0 W</span>
+                            </div>
+                        </div>
+
+                        <div class="data-card">
+                            <h4>Battery Terminals</h4>
+                            <div class="data-row">
+                                <span class="data-label">Voltage:
+                                    <span class="data-formula" id="batteryVoltageFormula"></span>
+                                </span>
+                                <span class="data-value" id="batteryVoltage">0 V</span>
+                            </div>
+                            <div class="data-row">
+                                <span class="data-label">Current:
+                                    <span class="data-formula" id="batteryCurrentFormula"></span>
+                                </span>
+                                <span class="data-value" id="batteryCurrent">0 A</span>
+                            </div>
+                            <div class="data-row">
+                                <span class="data-label">Power:
+                                    <span class="data-formula" id="batteryPowerFormula"></span>
+                                </span>
+                                <span class="data-value" id="batteryPower">0 W</span>
+                            </div>
+                        </div>
+
+                        <div class="data-card">
+                            <h4>Inverter Output (Load)</h4>
+                            <div class="data-row">
+                                <span class="data-label">Voltage:
+                                    <span class="data-formula">Output voltage</span>
+                                </span>
+                                <span class="data-value" id="inverterOutputVoltage">0 V</span>
+                            </div>
+                            <div class="data-row">
+                                <span class="data-label">Current:
+                                    <span class="data-formula" id="inverterOutputCurrentFormula"></span>
+                                </span>
+                                <span class="data-value" id="inverterOutputCurrent">0 A</span>
+                            </div>
+                            <div class="data-row">
+                                <span class="data-label">Power:
+                                    <span class="data-formula">Real power (W)</span>
+                                </span>
+                                <span class="data-value" id="inverterOutputPower">0 W</span>
+                            </div>
+                            <div class="data-row">
+                                <span class="data-label">Apparent Power:
+                                    <span class="data-formula" id="apparentPowerFormula"></span>
+                                </span>
+                                <span class="data-value" id="apparentPower">0 VA</span>
+                            </div>
+                        </div>
+
+                        <div class="data-card" style="border-left-color: #e74c3c;">
+                            <h4>🌡️ Thermal Analysis</h4>
+                            <div class="data-row">
+                                <span class="data-label">Heat Dissipated:
+                                    <span class="data-formula">Σ(losses from inefficiencies)</span>
+                                </span>
+                                <span class="data-value" id="heatDissipated">0 W</span>
+                            </div>
+                            <div class="data-row">
+                                <span class="data-label">Required Airflow:
+                                    <span class="data-formula" id="requiredCFMFormula"></span>
+                                </span>
+                                <span class="data-value" id="requiredCFM">0 CFM</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Runtime Graph -->
+                <div class="canvas-container">
+                    <h2>Runtime vs. Load Analysis</h2>
+                    <canvas id="graphCanvas"></canvas>
+                    
+                    <!-- Runtime Calculator -->
+                    <div style="margin-top: 15px; padding: 15px; background: #f8f9fa; border-radius: 6px; border: 2px solid #e0e0e0;">
+                        <h4 style="margin: 0 0 10px 0; color: #2c3e50; font-size: 0.95em;">Runtime Calculator</h4>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr auto; gap: 10px; align-items: end;">
+                            <div class="input-group" style="margin: 0;">
+                                <label>Load Value</label>
+                                <input type="number" id="runtimeCalcLoad" placeholder="e.g., 500" step="10" min="0">
+                            </div>
+                            <div class="input-group" style="margin: 0;">
+                                <label>Unit</label>
+                                <select id="runtimeCalcUnit" style="width: 100%; padding: 8px 12px; border: 2px solid #ddd; border-radius: 4px; font-size: 0.95em;">
+                                    <option value="watts">Watts (W)</option>
+                                    <option value="percent">Percent (%)</option>
+                                </select>
+                            </div>
+                            <button id="clearRuntimeCalc" style="padding: 8px 16px; background: #e74c3c; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; height: 38px;" title="Clear calculator">Clear</button>
+                        </div>
+                        <div id="runtimeCalcResult" style="margin-top: 12px; padding: 10px; background: white; border-radius: 4px; border: 2px solid #667eea; font-size: 0.95em; min-height: 24px; display: none;">
+                            <strong style="color: #667eea;">Runtime:</strong> <span id="runtimeCalcValue" style="color: #2c3e50; font-weight: bold;"></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ============================================
+        // GLOBAL STATE AND CONFIGURATION
+        // ============================================
+        const state = {
+            mode: 'normal',
+            warnings: [],
+            particles: [],
+            animationId: null,
+            graphPoints: [],
+            graphBounds: null,
+            hoveredPoint: null,
+            calculatorActive: false
+        };
+
+        const DC_BUS_VOLTAGE = 400; // Fixed DC bus voltage
+
+        // ============================================
+        // ELECTRICAL CALCULATIONS ENGINE
+        // ============================================
+        function calculateSystem() {
+            const inputs = getInputs();
+            const results = {
+                pfcInput: {},
+                dcBus: {},
+                battery: {},
+                inverterOutput: {},
+                warnings: []
+            };
+
+            // Battery Configuration
+            const batteryVoltage = inputs.cellVoltage * inputs.seriesCount;
+            const batteryCapacity = inputs.cellCapacity * inputs.parallelCount; // Ah
+            const batteryMaxCurrent = inputs.maxCellCurrent * inputs.parallelCount; // A
+            const minBatteryVoltage = inputs.minCellVoltage * inputs.seriesCount;
+
+            // Mode-specific calculations
+            switch(state.mode) {
+                case 'normal':
+                    calculateNormalMode(inputs, results);
+                    break;
+                case 'charging':
+                    calculateChargingMode(inputs, results, batteryVoltage);
+                    break;
+                case 'battery':
+                    calculateBatteryMode(inputs, results, batteryVoltage, minBatteryVoltage, batteryMaxCurrent);
+                    break;
+                case 'bypass':
+                    calculateBypassMode(inputs, results);
+                    break;
+            }
+
+            // Common battery display
+            results.battery.voltage = batteryVoltage;
+            results.battery.capacity = batteryCapacity;
+            results.battery.maxCurrent = batteryMaxCurrent;
+
+            // Circuit Breaker Checks
+            checkCircuitBreakers(inputs, results);
+
+            state.warnings = results.warnings;
+            
+            // Calculate thermal dissipation
+            calculateThermalLoad(inputs, results);
+            
+            return results;
+        }
+
+        function calculateThermalLoad(inputs, results) {
+            let totalHeatDissipated = 0;
+            
+            // Calculate heat from each component based on inefficiency
+            // Transformer heat
+            if (results.pfcInput.power > 0) {
+                const transformerInputPower = results.pfcInput.power / (inputs.transformerEff / 100);
+                const transformerHeat = transformerInputPower - results.pfcInput.power;
+                totalHeatDissipated += transformerHeat;
+            }
+            
+            // PFC heat
+            if (results.dcBus.power > 0 && results.pfcInput.power > 0) {
+                const pfcHeat = results.pfcInput.power - results.dcBus.power;
+                totalHeatDissipated += pfcHeat;
+            }
+            
+            // Inverter heat
+            if (results.inverterOutput.power > 0 && results.dcBus.power > 0) {
+                const inverterInputPower = results.inverterOutput.power / (inputs.inverterEff / 100);
+                const inverterHeat = inverterInputPower - results.inverterOutput.power;
+                totalHeatDissipated += inverterHeat;
+            }
+            
+            // Charger heat (in charging mode)
+            if (results.battery.chargingPower > 0) {
+                const chargerInputPower = results.battery.chargingPower / (inputs.chargerEff / 100);
+                const chargerHeat = chargerInputPower - results.battery.chargingPower;
+                totalHeatDissipated += chargerHeat;
+            }
+            
+            // Boost converter heat (in battery mode)
+            if (state.mode === 'battery' && results.battery.power > 0) {
+                const boostOutputPower = results.battery.power * (inputs.boostEff / 100);
+                const boostHeat = results.battery.power - boostOutputPower;
+                totalHeatDissipated += boostHeat;
+            }
+            
+            // Calculate required CFM using thermal formula: CFM = (3.16 × P) / ΔT
+            const deltaT = inputs.maxInternalTemp - inputs.ambientTemp;
+            const requiredCFM = deltaT > 0 ? (3.16 * totalHeatDissipated) / deltaT : 0;
+            
+            // Store thermal results with formula
+            results.thermal = {
+                heatDissipated: totalHeatDissipated,
+                requiredCFM: requiredCFM,
+                deltaT: deltaT,
+                requiredCFMFormula: `(3.16 × ${totalHeatDissipated.toFixed(1)}W) / ${deltaT}°C`
+            };
+        }
+
+        function calculateNormalMode(inputs, results) {
+            // Grid → Transformer → PFC → DC Bus → Inverter → Load
+            
+            // Transformer output
+            const transformerVoltage = inputs.gridVoltage * inputs.turnsRatio;
+            const transformerPower = inputs.loadPower / (inputs.inverterEff / 100) / (inputs.pfcEff / 100);
+            const transformerCurrent = transformerPower / transformerVoltage;
+            
+            // PFC Input (Post-Transformer)
+            results.pfcInput.voltage = transformerVoltage;
+            results.pfcInput.current = transformerCurrent;
+            results.pfcInput.power = transformerPower;
+            
+            // Input current (Pre-Transformer)
+            results.inputCurrent = transformerPower / (inputs.transformerEff / 100) / inputs.gridVoltage;
+            
+            // DC Bus
+            results.dcBus.voltage = DC_BUS_VOLTAGE;
+            const dcBusPower = transformerPower * (inputs.pfcEff / 100);
+            results.dcBus.current = dcBusPower / DC_BUS_VOLTAGE;
+            results.dcBus.power = dcBusPower;
+            
+            // Inverter Output
+            results.inverterOutput.power = inputs.loadPower;
+            results.inverterOutput.voltage = inputs.outputVoltage;
+            
+            // Calculate current and VA based on reactive load toggle
+            if (inputs.reactiveLoadEnabled) {
+                // Use VA rating as apparent power (maximum reactive scenario)
+                const apparentPower = inputs.outputVA;
+                // Check if real power exceeds VA rating
+                if (inputs.loadPower > apparentPower) {
+                    results.warnings.push({
+                        type: 'va',
+                        message: `POWER EXCEEDS VA RATING: ${inputs.loadPower}W exceeds ${apparentPower}VA rating`
+                    });
+                }
+                // Current is based on apparent power: I = S / V
+                results.inverterOutput.current = apparentPower / inputs.outputVoltage;
+                results.inverterOutput.apparentPower = apparentPower;
+            } else {
+                // Resistive load: VA = W (PF = 1.0)
+                results.inverterOutput.current = inputs.loadPower / inputs.outputVoltage;
+                results.inverterOutput.apparentPower = inputs.loadPower;
+            }
+            
+            // Battery (not active in normal mode)
+            results.battery.current = 0;
+            results.battery.power = 0;
+        }
+
+        function calculateChargingMode(inputs, results, batteryVoltage) {
+            // Normal mode + charging
+            calculateNormalMode(inputs, results);
+            
+            // Calculate charging current based on charger max power and end of discharge voltage
+            // Assume current limit based on end of discharge voltage
+            const chargingPower = inputs.chargerMaxPower;
+            const maxChargingCurrent = chargingPower / inputs.endOfDischargeVoltage;
+            
+            // Actual charging current at current battery voltage
+            const actualChargingCurrent = Math.min(maxChargingCurrent, chargingPower / batteryVoltage);
+            const actualChargingPowerAtBattery = actualChargingCurrent * batteryVoltage;
+            
+            // Power at charger input (accounting for efficiency)
+            const chargerInputPower = actualChargingPowerAtBattery / (inputs.chargerEff / 100);
+            
+            results.battery.current = actualChargingCurrent;
+            results.battery.power = actualChargingPowerAtBattery;
+            results.battery.chargingPower = actualChargingPowerAtBattery;
+            
+            // Store charger power for formula display
+            results.charger = {
+                power: chargerInputPower
+            };
+            
+            // Adjust DC Bus current to include charging
+            results.dcBus.current += chargerInputPower / DC_BUS_VOLTAGE;
+            results.dcBus.power += chargerInputPower;
+            
+            // Update PFC input to account for charging power
+            const additionalInputPower = chargerInputPower / (inputs.pfcEff / 100);
+            results.pfcInput.power += additionalInputPower;
+            results.pfcInput.current = results.pfcInput.power / results.pfcInput.voltage;
+            
+            // Update input current to account for charging power
+            results.inputCurrent = results.pfcInput.power / (inputs.transformerEff / 100) / inputs.gridVoltage;
+        }
+
+        function calculateBatteryMode(inputs, results, batteryVoltage, minBatteryVoltage, batteryMaxCurrent) {
+            // Battery → Boost → DC Bus → Inverter → Load
+            
+            // Calculate required power at battery considering all losses
+            const inverterInputPower = inputs.loadPower / (inputs.inverterEff / 100);
+            const boostInputPower = inverterInputPower / (inputs.boostEff / 100);
+            
+            // Battery output
+            results.battery.current = boostInputPower / batteryVoltage;
+            results.battery.power = boostInputPower;
+            
+            // DC Bus
+            results.dcBus.voltage = DC_BUS_VOLTAGE;
+            results.dcBus.current = inverterInputPower / DC_BUS_VOLTAGE;
+            results.dcBus.power = inverterInputPower;
+            
+            // Inverter Output with reactive load consideration
+            results.inverterOutput.power = inputs.loadPower;
+            results.inverterOutput.voltage = inputs.outputVoltage;
+            
+            if (inputs.reactiveLoadEnabled) {
+                const apparentPower = inputs.outputVA;
+                if (inputs.loadPower > apparentPower) {
+                    results.warnings.push({
+                        type: 'va',
+                        message: `POWER EXCEEDS VA RATING: ${inputs.loadPower}W exceeds ${apparentPower}VA rating`
+                    });
+                }
+                results.inverterOutput.current = apparentPower / inputs.outputVoltage;
+                results.inverterOutput.apparentPower = apparentPower;
+            } else {
+                results.inverterOutput.current = inputs.loadPower / inputs.outputVoltage;
+                results.inverterOutput.apparentPower = inputs.loadPower;
+            }
+            
+            // PFC Input (not active in battery mode)
+            results.pfcInput.voltage = 0;
+            results.pfcInput.current = 0;
+            results.pfcInput.power = 0;
+            results.inputCurrent = 0;
+            
+            // END-OF-DISCHARGE CHECK using custom end of discharge voltage
+            const endOfDischargeCurrentRequired = boostInputPower / inputs.endOfDischargeVoltage;
+            if (endOfDischargeCurrentRequired > batteryMaxCurrent) {
+                results.warnings.push({
+                    type: 'critical',
+                    message: `CRITICAL: DISCHARGE CURRENT EXCEEDS RATING (${endOfDischargeCurrentRequired.toFixed(2)}A required at end-of-discharge vs ${batteryMaxCurrent.toFixed(2)}A max)`
+                });
+            }
+        }
+
+        function calculateBypassMode(inputs, results) {
+            // Grid → Transformer → Bypass → Load (direct)
+            results.inverterOutput.power = inputs.loadPower;
+            results.inverterOutput.voltage = inputs.outputVoltage;
+            
+            if (inputs.reactiveLoadEnabled) {
+                const apparentPower = inputs.outputVA;
+                if (inputs.loadPower > apparentPower) {
+                    results.warnings.push({
+                        type: 'va',
+                        message: `POWER EXCEEDS VA RATING: ${inputs.loadPower}W exceeds ${apparentPower}VA rating`
+                    });
+                }
+                results.inverterOutput.current = apparentPower / inputs.outputVoltage;
+                results.inverterOutput.apparentPower = apparentPower;
+            } else {
+                results.inverterOutput.current = inputs.loadPower / inputs.outputVoltage;
+                results.inverterOutput.apparentPower = inputs.loadPower;
+            }
+            
+            results.inputCurrent = results.inverterOutput.current;
+            
+            // Other components not active
+            results.pfcInput.voltage = 0;
+            results.pfcInput.current = 0;
+            results.pfcInput.power = 0;
+            results.dcBus.voltage = 0;
+            results.dcBus.current = 0;
+            results.dcBus.power = 0;
+            results.battery.current = 0;
+            results.battery.power = 0;
+        }
+
+        function checkCircuitBreakers(inputs, results) {
+            // Input Circuit Breaker
+            if (results.inputCurrent && results.inputCurrent > inputs.inputCB) {
+                results.warnings.push({
+                    type: 'breaker',
+                    message: `INPUT BREAKER TRIP: ${results.inputCurrent.toFixed(2)}A exceeds ${inputs.inputCB}A rating`
+                });
+                results.inputBreakerTrip = true;
+            }
+            
+            // Output Circuit Breaker
+            if (results.inverterOutput.current > inputs.outputCB) {
+                results.warnings.push({
+                    type: 'breaker',
+                    message: `OUTPUT BREAKER TRIP: ${results.inverterOutput.current.toFixed(2)}A exceeds ${inputs.outputCB}A rating`
+                });
+                results.outputBreakerTrip = true;
+            }
+        }
+
+        function getInputs() {
+            const baseGridVoltage = parseFloat(document.getElementById('gridVoltage').value) || 115;
+            const voltageTolerance = parseFloat(document.getElementById('voltageTolerance').value) || 15;
+            const lowLineMode = document.getElementById('lowLineMode').checked;
+            const baseLoadPower = parseFloat(document.getElementById('loadPower').value) || 1000;
+            const overloadPercent = parseFloat(document.getElementById('overloadPercent').value) || 0;
+            const overloadMode = document.getElementById('overloadMode').checked;
+            
+            // Apply low line voltage reduction if enabled
+            const gridVoltage = lowLineMode ? baseGridVoltage * (1 - voltageTolerance / 100) : baseGridVoltage;
+            
+            // Apply overload if enabled
+            const loadPower = overloadMode ? baseLoadPower * (1 + overloadPercent / 100) : baseLoadPower;
+            
+            return {
+                gridVoltage: gridVoltage,
+                loadPower: loadPower,
+                baseGridVoltage: baseGridVoltage,
+                baseLoadPower: baseLoadPower,
+                outputVoltage: parseFloat(document.getElementById('outputVoltage').value) || 115,
+                voltageTolerance: voltageTolerance,
+                lowLineMode: lowLineMode,
+                overloadPercent: overloadPercent,
+                overloadMode: overloadMode,
+                turnsRatio: parseFloat(document.getElementById('turnsRatio').value) || 1.0,
+                transformerEff: parseFloat(document.getElementById('transformerEff').value) || 95,
+                pfcEff: parseFloat(document.getElementById('pfcEff').value) || 92,
+                inverterEff: parseFloat(document.getElementById('inverterEff').value) || 90,
+                chargerEff: parseFloat(document.getElementById('chargerEff').value) || 85,
+                chargerMaxPower: parseFloat(document.getElementById('chargerMaxPower').value) || 200,
+                boostEff: parseFloat(document.getElementById('boostEff').value) || 88,
+                inputCB: parseFloat(document.getElementById('inputCB').value) || 50,
+                outputCB: parseFloat(document.getElementById('outputCB').value) || 40,
+                outputVA: parseFloat(document.getElementById('outputVA').value) || 1200,
+                reactiveLoadEnabled: document.getElementById('reactiveLoadEnabled').checked,
+                cellVoltage: parseFloat(document.getElementById('cellVoltage').value) || 12,
+                minCellVoltage: parseFloat(document.getElementById('minCellVoltage').value) || 10.5,
+                endOfDischargeVoltage: parseFloat(document.getElementById('endOfDischargeVoltage').value) || 105,
+                cellCapacity: parseFloat(document.getElementById('cellCapacity').value) || 10,
+                maxCellCurrent: parseFloat(document.getElementById('maxCellCurrent').value) || 50,
+                seriesCount: parseInt(document.getElementById('seriesCount').value) || 10,
+                parallelCount: parseInt(document.getElementById('parallelCount').value) || 1,
+                peukertCoefficient: parseFloat(document.getElementById('peukertCoefficient').value) || 1.2,
+                graphStartLoad: parseFloat(document.getElementById('graphStartLoad').value) || 0,
+                graphEndLoad: parseFloat(document.getElementById('graphEndLoad').value) || 0,
+                ambientTemp: parseFloat(document.getElementById('ambientTemp').value) || 25,
+                maxInternalTemp: parseFloat(document.getElementById('maxInternalTemp').value) || 40
+            };
+        }
+
+        // ============================================
+        // UI UPDATE FUNCTIONS
+        // ============================================
+        function updateDashboard(results) {
+            const inputs = getInputs();
+            
+            // PFC Input
+            document.getElementById('pfcInputVoltage').textContent = results.pfcInput.voltage.toFixed(2) + ' V';
+            document.getElementById('pfcInputVoltageFormula').textContent = `Grid × Ratio = ${inputs.gridVoltage.toFixed(1)}V × ${inputs.turnsRatio}`;
+            document.getElementById('pfcInputCurrent').textContent = results.pfcInput.current.toFixed(2) + ' A';
+            document.getElementById('pfcInputCurrentFormula').textContent = `P / V = ${results.pfcInput.power.toFixed(1)}W / ${results.pfcInput.voltage.toFixed(1)}V`;
+            document.getElementById('pfcInputPower').textContent = results.pfcInput.power.toFixed(2) + ' W';
+            if (state.mode === 'charging' && results.charger) {
+                const inverterPower = inputs.loadPower / (inputs.inverterEff / 100);
+                document.getElementById('pfcInputPowerFormula').textContent = `(${inverterPower.toFixed(1)}W inv + ${results.charger.power.toFixed(1)}W chg) / ${inputs.pfcEff}%`;
+            } else {
+                document.getElementById('pfcInputPowerFormula').textContent = `Load / (ηPFC × ηInv)`;
+            }
+            
+            // DC Bus
+            document.getElementById('dcBusVoltage').textContent = (results.dcBus.voltage || 0).toFixed(2) + ' V';
+            document.getElementById('dcBusCurrent').textContent = (results.dcBus.current || 0).toFixed(2) + ' A';
+            document.getElementById('dcBusCurrentFormula').textContent = `P / 400V = ${(results.dcBus.power || 0).toFixed(1)}W / 400V`;
+            document.getElementById('dcBusPower').textContent = (results.dcBus.power || 0).toFixed(2) + ' W';
+            document.getElementById('dcBusPowerFormula').textContent = `PFC Input × ηPFC`;
+            
+            // Battery
+            document.getElementById('batteryVoltage').textContent = results.battery.voltage.toFixed(2) + ' V';
+            document.getElementById('batteryVoltageFormula').textContent = `${inputs.seriesCount}S × ${inputs.cellVoltage}V/cell`;
+            document.getElementById('batteryCurrent').textContent = (results.battery.current || 0).toFixed(2) + ' A';
+            if (state.mode === 'charging') {
+                document.getElementById('batteryCurrentFormula').textContent = `Charging: ${inputs.chargerMaxPower}W / ${results.battery.voltage.toFixed(1)}V`;
+            } else if (state.mode === 'battery') {
+                document.getElementById('batteryCurrentFormula').textContent = `Discharging: P / V`;
+            } else {
+                document.getElementById('batteryCurrentFormula').textContent = `Idle`;
+            }
+            document.getElementById('batteryPower').textContent = (results.battery.power || 0).toFixed(2) + ' W';
+            document.getElementById('batteryPowerFormula').textContent = `V × I`;
+            
+            // Inverter Output
+            document.getElementById('inverterOutputVoltage').textContent = (results.inverterOutput.voltage || 0).toFixed(2) + ' V';
+            document.getElementById('inverterOutputCurrent').textContent = (results.inverterOutput.current || 0).toFixed(2) + ' A';
+            document.getElementById('inverterOutputCurrentFormula').textContent = inputs.reactiveLoadEnabled ? 
+                `S / V = ${inputs.outputVA}VA / ${(results.inverterOutput.voltage || 0).toFixed(1)}V` :
+                `P / V = ${(results.inverterOutput.power || 0).toFixed(1)}W / ${(results.inverterOutput.voltage || 0).toFixed(1)}V`;
+            document.getElementById('inverterOutputPower').textContent = (results.inverterOutput.power || 0).toFixed(2) + ' W';
+            document.getElementById('apparentPower').textContent = (results.inverterOutput.apparentPower || 0).toFixed(0) + ' VA';
+            document.getElementById('apparentPowerFormula').textContent = inputs.reactiveLoadEnabled ? 
+                `VA rating (${inputs.outputVA}VA)` : `= Power (PF=1.0)`;
+            
+            // Thermal Analysis
+            if (results.thermal) {
+                document.getElementById('heatDissipated').textContent = results.thermal.heatDissipated.toFixed(2) + ' W';
+                document.getElementById('requiredCFM').textContent = results.thermal.requiredCFM.toFixed(1) + ' CFM';
+                document.getElementById('requiredCFMFormula').textContent = results.thermal.requiredCFMFormula;
+            }
+        }
+
+        function updateWarnings(warnings) {
+            const banner = document.getElementById('warningBanner');
+            
+            if (warnings.length === 0) {
+                banner.classList.remove('active');
+                banner.innerHTML = '';
+            } else {
+                banner.classList.add('active');
+                banner.innerHTML = warnings.map(w => 
+                    `<div class="warning-item">⚠️ ${w.message}</div>`
+                ).join('');
+            }
+        }
+
+        // ============================================
+        // CANVAS DIAGRAM WITH PARTICLE ANIMATION
+        // ============================================
+        const diagramCanvas = document.getElementById('diagramCanvas');
+        const diagramCtx = diagramCanvas.getContext('2d');
+
+        function resizeDiagramCanvas() {
+            const rect = diagramCanvas.getBoundingClientRect();
+            diagramCanvas.width = rect.width;
+            diagramCanvas.height = rect.height;
+        }
+
+        // Component positions (as percentages of canvas size)
+        const components = {
+            grid: { x: 0.05, y: 0.5, w: 0.08, h: 0.12, label: 'Grid' },
+            inputCB: { x: 0.15, y: 0.5, w: 0.06, h: 0.08, label: 'Input CB' },
+            transformer: { x: 0.24, y: 0.5, w: 0.1, h: 0.12, label: 'Transformer' },
+            bypass: { x: 0.49, y: 0.15, w: 0.1, h: 0.1, label: 'Bypass Switch' },
+            pfc: { x: 0.37, y: 0.5, w: 0.1, h: 0.12, label: 'PFC' },
+            dcBus: { x: 0.5, y: 0.5, w: 0.08, h: 0.15, label: 'DC Bus\n400V' },
+            inverter: { x: 0.61, y: 0.5, w: 0.1, h: 0.12, label: 'Inverter' },
+            outputCB: { x: 0.74, y: 0.5, w: 0.06, h: 0.08, label: 'Output CB' },
+            load: { x: 0.83, y: 0.5, w: 0.12, h: 0.12, label: 'Load' },
+            battery: { x: 0.49, y: 0.75, w: 0.1, h: 0.1, label: 'Battery' },
+            charger: { x: 0.46, y: 0.65, w: 0.06, h: 0.06, label: 'Charger' },
+            boost: { x: 0.56, y: 0.65, w: 0.06, h: 0.06, label: 'Boost' }
+        };
+
+        // Energy flow paths for each mode
+        const flowPaths = {
+            normal: [
+                ['grid', 'inputCB', 'transformer', 'pfc', 'dcBus', 'inverter', 'outputCB', 'load']
+            ],
+            charging: [
+                ['grid', 'inputCB', 'transformer', 'pfc', 'dcBus', 'inverter', 'outputCB', 'load'],
+                ['dcBus', 'charger', 'battery']
+            ],
+            battery: [
+                ['battery', 'boost', 'dcBus', 'inverter', 'outputCB', 'load']
+            ],
+            bypass: [
+                ['grid', 'inputCB', 'transformer', 'bypass', 'outputCB', 'load']
+            ]
+        };
+
+        class Particle {
+            constructor(path, pathIndex) {
+                this.path = path;
+                this.pathIndex = pathIndex;
+                this.progress = Math.random(); // 0 to 1
+                this.speed = 0.003 + Math.random() * 0.002;
+                this.size = 4 + Math.random() * 3;
+            }
+
+            update() {
+                this.progress += this.speed;
+                if (this.progress > 1) {
+                    this.progress = 0;
+                }
+            }
+
+            draw(ctx, canvas) {
+                const segmentIndex = Math.floor(this.progress * (this.path.length - 1));
+                const segmentProgress = (this.progress * (this.path.length - 1)) % 1;
+                
+                const from = components[this.path[segmentIndex]];
+                const to = components[this.path[segmentIndex + 1]];
+                
+                if (!from || !to) return;
+                
+                const x1 = from.x * canvas.width + (from.w * canvas.width) / 2;
+                const y1 = from.y * canvas.height;
+                const x2 = to.x * canvas.width + (to.w * canvas.width) / 2;
+                const y2 = to.y * canvas.height;
+                
+                const x = x1 + (x2 - x1) * segmentProgress;
+                const y = y1 + (y2 - y1) * segmentProgress;
+                
+                // Glow effect
+                const gradient = ctx.createRadialGradient(x, y, 0, x, y, this.size * 3);
+                
+                // Color based on mode
+                let color;
+                switch(state.mode) {
+                    case 'normal': color = '76, 255, 76'; break;
+                    case 'charging': color = '100, 149, 237'; break;
+                    case 'battery': color = '255, 215, 0'; break;
+                    case 'bypass': color = '255, 255, 255'; break;
+                    default: color = '76, 255, 76';
+                }
+                
+                gradient.addColorStop(0, `rgba(${color}, 1)`);
+                gradient.addColorStop(0.4, `rgba(${color}, 0.6)`);
+                gradient.addColorStop(1, `rgba(${color}, 0)`);
+                
+                ctx.shadowBlur = 15;
+                ctx.shadowColor = `rgba(${color}, 0.8)`;
+                ctx.fillStyle = gradient;
+                ctx.beginPath();
+                ctx.arc(x, y, this.size, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.shadowBlur = 0;
+            }
+        }
+
+        function initParticles() {
+            state.particles = [];
+            const paths = flowPaths[state.mode];
+            const particlesPerPath = 12;
+            
+            paths.forEach((path, pathIndex) => {
+                for (let i = 0; i < particlesPerPath; i++) {
+                    state.particles.push(new Particle(path, pathIndex));
+                }
+            });
+        }
+
+        function drawComponent(ctx, canvas, comp, label, isTripped = false) {
+            const x = comp.x * canvas.width;
+            const y = comp.y * canvas.height - (comp.h * canvas.height) / 2;
+            const w = comp.w * canvas.width;
+            const h = comp.h * canvas.height;
+            
+            // Component box
+            ctx.fillStyle = isTripped ? '#ff4444' : '#34495e';
+            ctx.strokeStyle = isTripped ? '#cc0000' : '#2c3e50';
+            ctx.lineWidth = 2;
+            ctx.fillRect(x, y, w, h);
+            ctx.strokeRect(x, y, w, h);
+            
+            // Label
+            ctx.fillStyle = 'white';
+            ctx.font = 'bold 12px Arial';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            
+            const lines = label.split('\n');
+            lines.forEach((line, i) => {
+                ctx.fillText(line, x + w/2, y + h/2 + (i - lines.length/2 + 0.5) * 14);
+            });
+        }
+
+        function drawConnections(ctx, canvas) {
+            const paths = flowPaths[state.mode];
+            ctx.strokeStyle = '#95a5a6';
+            ctx.lineWidth = 2;
+            ctx.setLineDash([5, 5]);
+            
+            paths.forEach(path => {
+                for (let i = 0; i < path.length - 1; i++) {
+                    const from = components[path[i]];
+                    const to = components[path[i + 1]];
+                    
+                    const x1 = from.x * canvas.width + (from.w * canvas.width) / 2;
+                    const y1 = from.y * canvas.height;
+                    const x2 = to.x * canvas.width + (to.w * canvas.width) / 2;
+                    const y2 = to.y * canvas.height;
+                    
+                    ctx.beginPath();
+                    ctx.moveTo(x1, y1);
+                    ctx.lineTo(x2, y2);
+                    ctx.stroke();
+                }
+            });
+            
+            ctx.setLineDash([]);
+        }
+
+        function drawDiagram(results) {
+            const canvas = diagramCanvas;
+            const ctx = diagramCtx;
+            
+            // Clear canvas
+            ctx.fillStyle = '#ecf0f1';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            // Draw connections
+            drawConnections(ctx, canvas);
+            
+            // Draw particles
+            state.particles.forEach(p => {
+                p.update();
+                p.draw(ctx, canvas);
+            });
+            
+            // Draw components
+            drawComponent(ctx, canvas, components.grid, 'Grid');
+            drawComponent(ctx, canvas, components.inputCB, 'Input CB', results.inputBreakerTrip);
+            drawComponent(ctx, canvas, components.transformer, 'Transformer');
+            drawComponent(ctx, canvas, components.bypass, 'Bypass\nSwitch');
+            drawComponent(ctx, canvas, components.pfc, 'PFC');
+            drawComponent(ctx, canvas, components.dcBus, 'DC Bus\n400V');
+            drawComponent(ctx, canvas, components.inverter, 'Inverter');
+            drawComponent(ctx, canvas, components.outputCB, 'Output CB', results.outputBreakerTrip);
+            drawComponent(ctx, canvas, components.load, 'Load');
+            drawComponent(ctx, canvas, components.battery, 'Battery');
+            drawComponent(ctx, canvas, components.charger, 'Charger');
+            drawComponent(ctx, canvas, components.boost, 'Boost');
+        }
+
+        // ============================================
+        // RUNTIME GRAPH
+        // ============================================
+        const graphCanvas = document.getElementById('graphCanvas');
+        const graphCtx = graphCanvas.getContext('2d');
+
+        function resizeGraphCanvas() {
+            const rect = graphCanvas.getBoundingClientRect();
+            graphCanvas.width = rect.width;
+            graphCanvas.height = rect.height;
+        }
+
+        function drawRuntimeGraph() {
+            const canvas = graphCanvas;
+            const ctx = graphCtx;
+            const inputs = getInputs();
+            
+            // Clear canvas
+            ctx.fillStyle = 'white';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            // Calculate battery specs
+            const batteryVoltage = inputs.cellVoltage * inputs.seriesCount;
+            const batteryCapacity = inputs.cellCapacity * inputs.parallelCount; // Ah
+            const batteryEnergy = batteryVoltage * batteryCapacity; // Wh
+            
+            // Efficiency chain for battery mode
+            const totalEfficiency = (inputs.boostEff / 100) * (inputs.inverterEff / 100);
+            
+            // Peukert effect parameters
+            // Assume rated discharge is at C/20 rate (capacity / 20)
+            const ratedDischargeCurrent = batteryCapacity / 20; // A at C/20 rate
+            const peukertN = inputs.peukertCoefficient;
+            
+            // Graph parameters
+            const padding = 60;
+            const graphWidth = canvas.width - 2 * padding;
+            const graphHeight = canvas.height - 2 * padding;
+            
+            // Generate data points with custom load range
+            const currentLoad = inputs.loadPower;
+            const minLoad = inputs.graphStartLoad || Math.max(100, Math.floor(currentLoad * 0.3));
+            const points = [];
+            
+            // Generate points in 100W decrements from target load down to start load
+            for (let load = currentLoad; load >= minLoad; load -= 100) {
+                if (load > 0) {
+                    const dischargeCurrent = (load / totalEfficiency) / batteryVoltage;
+                    const peukertFactor = Math.pow(ratedDischargeCurrent / dischargeCurrent, peukertN - 1);
+                    const effectiveCapacity = batteryCapacity * peukertFactor;
+                    const runtime = (effectiveCapacity * batteryVoltage * totalEfficiency / load) * 60;
+                    points.push({ load, runtime });
+                }
+            }
+            
+            // Add final point at minLoad if we didn't land exactly on it
+            if (minLoad > 0 && (points.length === 0 || points[points.length - 1].load !== minLoad)) {
+                const dischargeCurrent = (minLoad / totalEfficiency) / batteryVoltage;
+                const peukertFactor = Math.pow(ratedDischargeCurrent / dischargeCurrent, peukertN - 1);
+                const effectiveCapacity = batteryCapacity * peukertFactor;
+                const runtime = (effectiveCapacity * batteryVoltage * totalEfficiency / minLoad) * 60;
+                points.push({ load: minLoad, runtime });
+            }
+            
+            if (points.length === 0) return; // Safety check
+            
+            // Store points and bounds in state for hover interaction
+            state.graphPoints = points;
+            state.graphBounds = {
+                padding: padding,
+                graphWidth: graphWidth,
+                graphHeight: graphHeight,
+                canvasWidth: canvas.width,
+                canvasHeight: canvas.height
+            };
+            
+            // Find scales using actual point ranges
+            const actualMinLoad = Math.min(...points.map(p => p.load));
+            const actualMaxLoad = Math.max(...points.map(p => p.load));
+            const maxRuntime = Math.max(...points.map(p => p.runtime));
+            
+            // Ensure we have a valid range for scaling
+            const loadRange = actualMaxLoad - actualMinLoad;
+            const xScale = loadRange > 0 ? graphWidth / loadRange : 0;
+            const yScale = maxRuntime > 0 ? graphHeight / maxRuntime : 0;
+            
+            // Draw axes
+            ctx.strokeStyle = '#2c3e50';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(padding, padding);
+            ctx.lineTo(padding, canvas.height - padding);
+            ctx.lineTo(canvas.width - padding, canvas.height - padding);
+            ctx.stroke();
+            
+            // Draw grid
+            ctx.strokeStyle = '#e0e0e0';
+            ctx.lineWidth = 1;
+            for (let i = 0; i <= 5; i++) {
+                const y = padding + (graphHeight / 5) * i;
+                ctx.beginPath();
+                ctx.moveTo(padding, y);
+                ctx.lineTo(canvas.width - padding, y);
+                ctx.stroke();
+                
+                const x = padding + (graphWidth / 5) * i;
+                ctx.beginPath();
+                ctx.moveTo(x, padding);
+                ctx.lineTo(x, canvas.height - padding);
+                ctx.stroke();
+            }
+            
+            // Draw labels
+            ctx.fillStyle = '#2c3e50';
+            ctx.font = '12px Arial';
+            ctx.textAlign = 'center';
+            
+            // X-axis labels
+            for (let i = 0; i <= 5; i++) {
+                const load = actualMinLoad + (actualMaxLoad - actualMinLoad) * i / 5;
+                const x = padding + (graphWidth / 5) * i;
+                ctx.fillText(Math.round(load) + 'W', x, canvas.height - padding + 20);
+            }
+            
+            // Y-axis labels
+            ctx.textAlign = 'right';
+            ctx.textBaseline = 'middle';
+            for (let i = 0; i <= 5; i++) {
+                const runtime = maxRuntime * (5 - i) / 5;
+                const y = padding + (graphHeight / 5) * i;
+                ctx.fillText(Math.round(runtime) + ' min', padding - 10, y);
+            }
+            
+            // Axis titles
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'top';
+            ctx.font = 'bold 14px Arial';
+            ctx.fillText('Load Power (W)', canvas.width / 2, canvas.height - 20);
+            
+            // Draw curve
+            ctx.strokeStyle = '#667eea';
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            
+            points.forEach((point, i) => {
+                const x = padding + (point.load - actualMinLoad) * xScale;
+                const y = canvas.height - padding - point.runtime * yScale;
+                
+                if (i === 0) {
+                    ctx.moveTo(x, y);
+                } else {
+                    ctx.lineTo(x, y);
+                }
+            });
+            
+            ctx.stroke();
+            
+            // Draw hover indicator if hovering
+            if (state.hoveredPoint) {
+                const hoverX = padding + (state.hoveredPoint.load - actualMinLoad) * xScale;
+                const hoverY = canvas.height - padding - state.hoveredPoint.runtime * yScale;
+                
+                // Draw vertical line
+                ctx.strokeStyle = 'rgba(52, 152, 219, 0.5)';
+                ctx.lineWidth = 1;
+                ctx.setLineDash([5, 5]);
+                ctx.beginPath();
+                ctx.moveTo(hoverX, padding);
+                ctx.lineTo(hoverX, canvas.height - padding);
+                ctx.stroke();
+                ctx.setLineDash([]);
+                
+                // Draw point
+                ctx.fillStyle = '#3498db';
+                ctx.beginPath();
+                ctx.arc(hoverX, hoverY, 5, 0, Math.PI * 2);
+                ctx.fill();
+                
+                // Draw tooltip background
+                const tooltipText = `${state.hoveredPoint.load.toFixed(0)}W, ${state.hoveredPoint.runtime.toFixed(1)} min`;
+                ctx.font = '12px Arial';
+                const textWidth = ctx.measureText(tooltipText).width;
+                const tooltipX = hoverX + 10;
+                const tooltipY = hoverY - 30;
+                const tooltipPadding = 8;
+                
+                ctx.fillStyle = 'rgba(255, 255, 255, 0.95)';
+                ctx.strokeStyle = '#3498db';
+                ctx.lineWidth = 2;
+                ctx.fillRect(tooltipX, tooltipY, textWidth + tooltipPadding * 2, 24);
+                ctx.strokeRect(tooltipX, tooltipY, textWidth + tooltipPadding * 2, 24);
+                
+                // Draw tooltip text
+                ctx.fillStyle = '#2c3e50';
+                ctx.textAlign = 'left';
+                ctx.textBaseline = 'middle';
+                ctx.fillText(tooltipText, tooltipX + tooltipPadding, tooltipY + 12);
+            }
+        }
+
+        // ============================================
+        // ANIMATION LOOP
+        // ============================================
+        function animate() {
+            const results = calculateSystem();
+            drawDiagram(results);
+            updateDashboard(results);
+            updateWarnings(results.warnings);
+            drawRuntimeGraph();
+            
+            state.animationId = requestAnimationFrame(animate);
+        }
+
+        // ============================================
+        // EVENT HANDLERS
+        // ============================================
+        function setupEventListeners() {
+            // Mode buttons
+            document.querySelectorAll('.mode-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    state.mode = btn.dataset.mode;
+                    initParticles();
+                });
+            });
+            
+            // Input changes
+            const inputs = document.querySelectorAll('input');
+            inputs.forEach(input => {
+                input.addEventListener('input', () => {
+                    // Recalculation happens in animation loop
+                });
+            });
+            
+            // Window resize
+            window.addEventListener('resize', () => {
+                resizeDiagramCanvas();
+                resizeGraphCanvas();
+            });
+            
+            // Graph canvas mouse interaction
+            graphCanvas.addEventListener('mousemove', (e) => {
+                // Don't override calculator-set hover point
+                if (state.calculatorActive) return;
+                
+                const rect = graphCanvas.getBoundingClientRect();
+                const mouseX = e.clientX - rect.left;
+                const mouseY = e.clientY - rect.top;
+                
+                if (!state.graphPoints || state.graphPoints.length === 0 || !state.graphBounds) {
+                    return;
+                }
+                
+                const { padding, graphWidth, graphHeight, canvasWidth, canvasHeight } = state.graphBounds;
+                
+                // Check if mouse is within graph area
+                if (mouseX < padding || mouseX > canvasWidth - padding || 
+                    mouseY < padding || mouseY > canvasHeight - padding) {
+                    if (state.hoveredPoint) {
+                        state.hoveredPoint = null;
+                    }
+                    return;
+                }
+                
+                // Convert mouse position to load value
+                const actualMinLoad = Math.min(...state.graphPoints.map(p => p.load));
+                const actualMaxLoad = Math.max(...state.graphPoints.map(p => p.load));
+                const xScale = graphWidth / (actualMaxLoad - actualMinLoad);
+                const mouseLoad = actualMinLoad + (mouseX - padding) / xScale;
+                
+                // Find closest point
+                let closestPoint = null;
+                let minDistance = Infinity;
+                
+                state.graphPoints.forEach(point => {
+                    const distance = Math.abs(point.load - mouseLoad);
+                    if (distance < minDistance) {
+                        minDistance = distance;
+                        closestPoint = point;
+                    }
+                });
+                
+                // Only update if point changed
+                if (closestPoint && closestPoint !== state.hoveredPoint) {
+                    state.hoveredPoint = closestPoint;
+                }
+            });
+            
+            graphCanvas.addEventListener('mouseleave', () => {
+                if (!state.calculatorActive) {
+                    state.hoveredPoint = null;
+                }
+            });
+            
+            // Runtime calculator event handlers
+            const runtimeCalcLoad = document.getElementById('runtimeCalcLoad');
+            const runtimeCalcUnit = document.getElementById('runtimeCalcUnit');
+            const clearRuntimeCalc = document.getElementById('clearRuntimeCalc');
+            
+            if (runtimeCalcLoad && runtimeCalcUnit && clearRuntimeCalc) {
+                function updateRuntimeCalculator() {
+                    const loadValue = parseFloat(runtimeCalcLoad.value);
+                    const unit = runtimeCalcUnit.value;
+                    
+                    if (!loadValue || loadValue <= 0) {
+                        state.calculatorActive = false;
+                        state.hoveredPoint = null;
+                        document.getElementById('runtimeCalcResult').style.display = 'none';
+                        return;
+                    }
+                    
+                    const inputs = getInputs();
+                    let targetLoad;
+                    
+                    if (unit === 'percent') {
+                        targetLoad = inputs.loadPower * (loadValue / 100);
+                    } else {
+                        targetLoad = loadValue;
+                    }
+                    
+                    // Calculate runtime for this load
+                    const batteryVoltage = inputs.cellVoltage * inputs.seriesCount;
+                    const batteryCapacity = inputs.cellCapacity * inputs.parallelCount;
+                    const totalEfficiency = (inputs.boostEff / 100) * (inputs.inverterEff / 100);
+                    const ratedDischargeCurrent = batteryCapacity / 20;
+                    const peukertN = inputs.peukertCoefficient;
+                    
+                    if (targetLoad > 0) {
+                        const dischargeCurrent = (targetLoad / totalEfficiency) / batteryVoltage;
+                        const peukertFactor = Math.pow(ratedDischargeCurrent / dischargeCurrent, peukertN - 1);
+                        const effectiveCapacity = batteryCapacity * peukertFactor;
+                        const runtime = (effectiveCapacity * batteryVoltage * totalEfficiency / targetLoad) * 60;
+                        
+                        // Set hover point for graph
+                        state.calculatorActive = true;
+                        state.hoveredPoint = {
+                            load: targetLoad,
+                            runtime: runtime
+                        };
+                        
+                        // Display result
+                        document.getElementById('runtimeCalcResult').style.display = 'block';
+                        document.getElementById('runtimeCalcValue').textContent = 
+                            `${runtime.toFixed(1)} minutes at ${targetLoad.toFixed(0)}W`;
+                    } else {
+                        state.calculatorActive = false;
+                        state.hoveredPoint = null;
+                        document.getElementById('runtimeCalcResult').style.display = 'none';
+                    }
+                }
+                
+                runtimeCalcLoad.addEventListener('input', updateRuntimeCalculator);
+                runtimeCalcUnit.addEventListener('change', updateRuntimeCalculator);
+                
+                clearRuntimeCalc.addEventListener('click', () => {
+                    runtimeCalcLoad.value = '';
+                    state.calculatorActive = false;
+                    state.hoveredPoint = null;
+                    document.getElementById('runtimeCalcResult').style.display = 'none';
+                });
+            }
+        }
+
+        // ============================================
+        // INITIALIZATION
+        // ============================================
+        function init() {
+            resizeDiagramCanvas();
+            resizeGraphCanvas();
+            initParticles();
+            setupEventListeners();
+            animate();
+        }
+
+        // Start the application
+        init();
+    </script>
+</body>
+</html>
