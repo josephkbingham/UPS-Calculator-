@@ -112,7 +112,22 @@
             transition: border-color 0.3s;
         }
 
+        .input-group select {
+            width: 100%;
+            padding: 8px 12px;
+            border: 2px solid #ddd;
+            border-radius: 4px;
+            font-size: 0.95em;
+            transition: border-color 0.3s;
+            background: white;
+        }
+
         .input-group input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .input-group select:focus {
             outline: none;
             border-color: #667eea;
         }
@@ -275,6 +290,13 @@
                     <div class="input-group">
                         <label>Grid Input Voltage (V)</label>
                         <input type="number" id="gridVoltage" value="115" step="1">
+                    </div>
+                    <div class="input-group">
+                        <label>Input Phase</label>
+                        <select id="inputPhase">
+                            <option value="single" selected>Single Phase</option>
+                            <option value="three">3 Phase</option>
+                        </select>
                     </div>
                     <div class="input-group">
                         <label>Target Output Power (W)</label>
@@ -627,6 +649,11 @@
         };
 
         const DC_BUS_VOLTAGE = 400; // Fixed DC bus voltage
+        const SQRT3 = Math.sqrt(3);
+
+        function getPhaseFactor(inputs) {
+            return inputs.inputPhase === 'three' ? SQRT3 : 1;
+        }
 
         // ============================================
         // ELECTRICAL CALCULATIONS ENGINE
@@ -732,11 +759,12 @@
 
         function calculateNormalMode(inputs, results) {
             // Grid → Transformer → PFC → DC Bus → Inverter → Load
+            const phaseFactor = getPhaseFactor(inputs);
             
             // Transformer output
             const transformerVoltage = inputs.gridVoltage * inputs.turnsRatio;
             const transformerPower = inputs.loadPower / (inputs.inverterEff / 100) / (inputs.pfcEff / 100);
-            const transformerCurrent = transformerPower / transformerVoltage;
+            const transformerCurrent = transformerPower / (phaseFactor * transformerVoltage);
             
             // PFC Input (Post-Transformer)
             results.pfcInput.voltage = transformerVoltage;
@@ -744,7 +772,7 @@
             results.pfcInput.power = transformerPower;
             
             // Input current (Pre-Transformer)
-            results.inputCurrent = transformerPower / (inputs.transformerEff / 100) / inputs.gridVoltage;
+            results.inputCurrent = transformerPower / (inputs.transformerEff / 100) / (phaseFactor * inputs.gridVoltage);
             
             // DC Bus
             results.dcBus.voltage = DC_BUS_VOLTAGE;
@@ -784,6 +812,7 @@
         function calculateChargingMode(inputs, results, batteryVoltage) {
             // Normal mode + charging
             calculateNormalMode(inputs, results);
+            const phaseFactor = getPhaseFactor(inputs);
             
             // Calculate charging current based on charger max power and end of discharge voltage
             // Assume current limit based on end of discharge voltage
@@ -813,10 +842,10 @@
             // Update PFC input to account for charging power
             const additionalInputPower = chargerInputPower / (inputs.pfcEff / 100);
             results.pfcInput.power += additionalInputPower;
-            results.pfcInput.current = results.pfcInput.power / results.pfcInput.voltage;
+            results.pfcInput.current = results.pfcInput.power / (phaseFactor * results.pfcInput.voltage);
             
             // Update input current to account for charging power
-            results.inputCurrent = results.pfcInput.power / (inputs.transformerEff / 100) / inputs.gridVoltage;
+            results.inputCurrent = results.pfcInput.power / (inputs.transformerEff / 100) / (phaseFactor * inputs.gridVoltage);
         }
 
         function calculateBatteryMode(inputs, results, batteryVoltage, minBatteryVoltage, batteryMaxCurrent) {
@@ -872,6 +901,7 @@
 
         function calculateBypassMode(inputs, results) {
             // Grid → Transformer → Bypass → Load (direct)
+            const phaseFactor = getPhaseFactor(inputs);
             results.inverterOutput.power = inputs.loadPower;
             results.inverterOutput.voltage = inputs.outputVoltage;
             
@@ -890,7 +920,8 @@
                 results.inverterOutput.apparentPower = inputs.loadPower;
             }
             
-            results.inputCurrent = results.inverterOutput.current;
+            const inputApparentPower = results.inverterOutput.apparentPower;
+            results.inputCurrent = inputApparentPower / (inputs.transformerEff / 100) / (phaseFactor * inputs.gridVoltage);
             
             // Other components not active
             results.pfcInput.voltage = 0;
@@ -942,6 +973,7 @@
                 loadPower: loadPower,
                 baseGridVoltage: baseGridVoltage,
                 baseLoadPower: baseLoadPower,
+                inputPhase: document.getElementById('inputPhase').value,
                 outputVoltage: parseFloat(document.getElementById('outputVoltage').value) || 115,
                 voltageTolerance: voltageTolerance,
                 lowLineMode: lowLineMode,
@@ -983,7 +1015,8 @@
             document.getElementById('pfcInputVoltage').textContent = results.pfcInput.voltage.toFixed(2) + ' V';
             document.getElementById('pfcInputVoltageFormula').textContent = `Grid × Ratio = ${inputs.gridVoltage.toFixed(1)}V × ${inputs.turnsRatio}`;
             document.getElementById('pfcInputCurrent').textContent = results.pfcInput.current.toFixed(2) + ' A';
-            document.getElementById('pfcInputCurrentFormula').textContent = `P / V = ${results.pfcInput.power.toFixed(1)}W / ${results.pfcInput.voltage.toFixed(1)}V`;
+            const phaseLabel = inputs.inputPhase === 'three' ? '√3 × ' : '';
+            document.getElementById('pfcInputCurrentFormula').textContent = `P / (${phaseLabel}V) = ${results.pfcInput.power.toFixed(1)}W / (${phaseLabel}${results.pfcInput.voltage.toFixed(1)}V)`;
             document.getElementById('pfcInputPower').textContent = results.pfcInput.power.toFixed(2) + ' W';
             if (state.mode === 'charging' && results.charger) {
                 const inverterPower = inputs.loadPower / (inputs.inverterEff / 100);
@@ -1270,7 +1303,9 @@
             // Calculate battery specs
             const batteryVoltage = inputs.cellVoltage * inputs.seriesCount;
             const batteryCapacity = inputs.cellCapacity * inputs.parallelCount; // Ah
-            const batteryEnergy = batteryVoltage * batteryCapacity; // Wh
+            const minBatteryVoltage = inputs.minCellVoltage * inputs.seriesCount;
+            const endOfDischargeVoltage = Math.min(Math.max(inputs.endOfDischargeVoltage, minBatteryVoltage), batteryVoltage);
+            const usableCapacityFactor = (batteryVoltage - endOfDischargeVoltage) / Math.max(batteryVoltage - minBatteryVoltage, 1e-6);
             
             // Efficiency chain for battery mode
             const totalEfficiency = (inputs.boostEff / 100) * (inputs.inverterEff / 100);
@@ -1295,7 +1330,7 @@
                 if (load > 0) {
                     const dischargeCurrent = (load / totalEfficiency) / batteryVoltage;
                     const peukertFactor = Math.pow(ratedDischargeCurrent / dischargeCurrent, peukertN - 1);
-                    const effectiveCapacity = batteryCapacity * peukertFactor;
+                    const effectiveCapacity = batteryCapacity * usableCapacityFactor * peukertFactor;
                     const runtime = (effectiveCapacity * batteryVoltage * totalEfficiency / load) * 60;
                     points.push({ load, runtime });
                 }
@@ -1305,7 +1340,7 @@
             if (minLoad > 0 && (points.length === 0 || points[points.length - 1].load !== minLoad)) {
                 const dischargeCurrent = (minLoad / totalEfficiency) / batteryVoltage;
                 const peukertFactor = Math.pow(ratedDischargeCurrent / dischargeCurrent, peukertN - 1);
-                const effectiveCapacity = batteryCapacity * peukertFactor;
+                const effectiveCapacity = batteryCapacity * usableCapacityFactor * peukertFactor;
                 const runtime = (effectiveCapacity * batteryVoltage * totalEfficiency / minLoad) * 60;
                 points.push({ load: minLoad, runtime });
             }
@@ -1570,6 +1605,9 @@
                     // Calculate runtime for this load
                     const batteryVoltage = inputs.cellVoltage * inputs.seriesCount;
                     const batteryCapacity = inputs.cellCapacity * inputs.parallelCount;
+                    const minBatteryVoltage = inputs.minCellVoltage * inputs.seriesCount;
+                    const endOfDischargeVoltage = Math.min(Math.max(inputs.endOfDischargeVoltage, minBatteryVoltage), batteryVoltage);
+                    const usableCapacityFactor = (batteryVoltage - endOfDischargeVoltage) / Math.max(batteryVoltage - minBatteryVoltage, 1e-6);
                     const totalEfficiency = (inputs.boostEff / 100) * (inputs.inverterEff / 100);
                     const ratedDischargeCurrent = batteryCapacity / 20;
                     const peukertN = inputs.peukertCoefficient;
@@ -1577,7 +1615,7 @@
                     if (targetLoad > 0) {
                         const dischargeCurrent = (targetLoad / totalEfficiency) / batteryVoltage;
                         const peukertFactor = Math.pow(ratedDischargeCurrent / dischargeCurrent, peukertN - 1);
-                        const effectiveCapacity = batteryCapacity * peukertFactor;
+                        const effectiveCapacity = batteryCapacity * usableCapacityFactor * peukertFactor;
                         const runtime = (effectiveCapacity * batteryVoltage * totalEfficiency / targetLoad) * 60;
                         
                         // Set hover point for graph
