@@ -1,1666 +1,1451 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>UPS System Simulator</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            padding: 20px;
-            color: #333;
-        }
-
-        .container {
-            max-width: 1600px;
-            margin: 0 auto;
-            background: white;
-            border-radius: 12px;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
-            overflow: hidden;
-        }
-
-        header {
-            background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
-            color: white;
-            padding: 30px;
-            text-align: center;
-        }
-
-        header h1 {
-            font-size: 2.5em;
-            margin-bottom: 10px;
-        }
-
-        header p {
-            font-size: 1.1em;
-            opacity: 0.9;
-        }
-
-        .warning-banner {
-            background: #ff4444;
-            color: white;
-            padding: 15px 30px;
-            display: none;
-            font-weight: bold;
-        }
-
-        .warning-banner.active {
-            display: block;
-        }
-
-        .warning-item {
-            padding: 5px 0;
-            border-bottom: 1px solid rgba(255,255,255,0.3);
-        }
-
-        .warning-item:last-child {
-            border-bottom: none;
-        }
-
-        .main-content {
-            display: grid;
-            grid-template-columns: 350px 1fr;
-            gap: 20px;
-            padding: 20px;
-        }
-
-        .control-panel {
-            background: #f8f9fa;
-            padding: 20px;
-            border-radius: 8px;
-            height: fit-content;
-        }
-
-        .control-section {
-            margin-bottom: 25px;
-        }
-
-        .control-section h3 {
-            color: #2c3e50;
-            margin-bottom: 15px;
-            font-size: 1.1em;
-            border-bottom: 2px solid #667eea;
-            padding-bottom: 5px;
-        }
-
-        .input-group {
-            margin-bottom: 12px;
-        }
-
-        .input-group label {
-            display: block;
-            font-size: 0.9em;
-            color: #555;
-            margin-bottom: 5px;
-            font-weight: 500;
-        }
-
-        .input-group input {
-            width: 100%;
-            padding: 8px 12px;
-            border: 2px solid #ddd;
-            border-radius: 4px;
-            font-size: 0.95em;
-            transition: border-color 0.3s;
-        }
-
-        .input-group select {
-            width: 100%;
-            padding: 8px 12px;
-            border: 2px solid #ddd;
-            border-radius: 4px;
-            font-size: 0.95em;
-            transition: border-color 0.3s;
-            background: white;
-        }
-
-        .input-group input:focus {
-            outline: none;
-            border-color: #667eea;
-        }
-
-        .input-group select:focus {
-            outline: none;
-            border-color: #667eea;
-        }
-
-        .input-row {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 10px;
-        }
-
-        .mode-selector {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 10px;
-            margin-top: 20px;
-        }
-
-        .mode-btn {
-            padding: 12px;
-            border: 2px solid #667eea;
-            background: white;
-            color: #667eea;
-            border-radius: 6px;
-            font-size: 0.95em;
-            font-weight: bold;
-            cursor: pointer;
-            transition: all 0.3s;
-        }
-
-        .mode-btn:hover {
-            background: #f0f0ff;
-        }
-
-        .mode-btn.active {
-            background: #667eea;
-            color: white;
-        }
-
-        .visualization-area {
-            display: flex;
-            flex-direction: column;
-            gap: 20px;
-        }
-
-        .canvas-container {
-            background: #f8f9fa;
-            border-radius: 8px;
-            padding: 20px;
-        }
-
-        .canvas-container h2 {
-            color: #2c3e50;
-            margin-bottom: 15px;
-            font-size: 1.3em;
-        }
-
-        canvas {
-            display: block;
-            width: 100%;
-            background: white;
-            border-radius: 6px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-        }
-
-        #diagramCanvas {
-            height: 500px;
-        }
-
-        #graphCanvas {
-            height: 400px;
-        }
-
-        .dashboard {
-            background: #f8f9fa;
-            border-radius: 8px;
-            padding: 20px;
-        }
-
-        .dashboard h2 {
-            color: #2c3e50;
-            margin-bottom: 15px;
-            font-size: 1.3em;
-        }
-
-        .data-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            gap: 15px;
-        }
-
-        .data-card {
-            background: white;
-            border-radius: 6px;
-            padding: 15px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-            border-left: 4px solid #667eea;
-        }
-
-        .data-card h4 {
-            color: #2c3e50;
-            margin-bottom: 10px;
-            font-size: 1em;
-        }
-
-        .data-row {
-            display: flex;
-            justify-content: space-between;
-            padding: 6px 0;
-            border-bottom: 1px solid #f0f0f0;
-        }
-
-        .data-row:last-child {
-            border-bottom: none;
-        }
-
-        .data-label {
-            color: #666;
-            font-size: 0.9em;
-        }
-
-        .data-value {
-            font-weight: bold;
-            color: #2c3e50;
-            font-size: 0.95em;
-        }
-
-        .data-formula {
-            font-size: 0.75em;
-            color: #7f8c8d;
-            font-style: italic;
-            margin-top: 2px;
-            display: block;
-        }
-
-        #graphCanvas {
-            cursor: crosshair;
-        }
-
-        @media (max-width: 1200px) {
-            .main-content {
-                grid-template-columns: 1fr;
-            }
-        }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>UPS System Calculator — Intellipower</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'JetBrains Mono', 'Fira Code', monospace; background: #060b15; }
+  #root { min-height: 100vh; }
+</style>
 </head>
 <body>
-    <div class="container">
-        <header>
-            <h1>⚡ UPS System Simulator</h1>
-            <p>Comprehensive Energy Flow Analysis with Battery Runtime Prediction</p>
-        </header>
+<div id="root"></div>
 
-        <div class="warning-banner" id="warningBanner"></div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.9/babel.min.js"></script>
 
-        <div class="main-content">
-            <!-- Control Panel -->
-            <div class="control-panel">
-                <div class="control-section">
-                    <h3>Power & Load</h3>
-                    <div class="input-group">
-                        <label>Grid Input Voltage (V)</label>
-                        <input type="number" id="gridVoltage" value="115" step="1">
-                    </div>
-                    <div class="input-group">
-                        <label>Input Phase</label>
-                        <select id="inputPhase">
-                            <option value="single" selected>Single Phase</option>
-                            <option value="three">3 Phase</option>
-                        </select>
-                    </div>
-                    <div class="input-group">
-                        <label>Target Output Power (W)</label>
-                        <input type="number" id="loadPower" value="1000" step="10" min="10">
-                    </div>
-                    <div class="input-group">
-                        <label>Output Voltage (V)</label>
-                        <input type="number" id="outputVoltage" value="115" step="1" min="50">
-                    </div>
-                    <div class="input-group">
-                        <label>Output VA Rating</label>
-                        <input type="number" id="outputVA" value="1200" step="10" min="100">
-                    </div>
-                    <div class="input-group">
-                        <label style="display: flex; align-items: center; gap: 8px;">
-                            <input type="checkbox" id="reactiveLoadEnabled" style="width: auto;">
-                            <span>Enable Reactive Load (Max VA)</span>
-                        </label>
-                        <small style="color: #666; font-size: 0.85em; display: block; margin-top: 4px;">OFF: Resistive load at rated W | ON: Max reactive at VA rating</small>
-                    </div>
-                </div>
+<script type="text/babel">
+const { useState, useEffect, useCallback, useRef, useMemo } = React;
 
-                <div class="control-section">
-                    <h3>Transformer</h3>
-                    <div class="input-row">
-                        <div class="input-group">
-                            <label>Turns Ratio</label>
-                            <input type="number" id="turnsRatio" value="1.0" step="0.1">
-                        </div>
-                        <div class="input-group">
-                            <label>Efficiency (%)</label>
-                            <input type="number" id="transformerEff" value="95" step="0.1" min="0" max="100">
-                        </div>
-                    </div>
-                </div>
 
-                <div class="control-section">
-                    <h3>Component Efficiencies (%)</h3>
-                    <div class="input-group">
-                        <label>PFC (Rectifier) Efficiency</label>
-                        <input type="number" id="pfcEff" value="92" step="0.1" min="0" max="100">
-                    </div>
-                    <div class="input-group">
-                        <label>Inverter Efficiency</label>
-                        <input type="number" id="inverterEff" value="90" step="0.1" min="0" max="100">
-                    </div>
-                    <div class="input-group">
-                        <label>Charger Efficiency</label>
-                        <input type="number" id="chargerEff" value="85" step="0.1" min="0" max="100">
-                    </div>
-                    <div class="input-group">
-                        <label>Charger Max Power (W)</label>
-                        <input type="number" id="chargerMaxPower" value="200" step="10" min="0">
-                    </div>
-                    <div class="input-group">
-                        <label>Boost Converter Efficiency</label>
-                        <input type="number" id="boostEff" value="88" step="0.1" min="0" max="100">
-                    </div>
-                </div>
+// ═══════════════════════════════════════════════════
+// CONSTANTS & COLORS
+// ═══════════════════════════════════════════════════
+const C = {
+  bg: "#060b15", panelBg: "#0d1423", cardBg: "#111c2e", inputBg: "#0a1220",
+  acPath: "#3b82f6", dcBus: "#f59e0b", battPath: "#10b981", outputPath: "#8b5cf6",
+  bypassPath: "#ef4444", text: "#e2e8f0", sub: "#7a8ba8", muted: "#4a5568",
+  border: "#1a2744", busBar: "#f59e0b", fuse: "#f97316", cb: "#06b6d4",
+  warn: "#ef4444", ok: "#10b981",
+};
+const LOGO_URI = "data:image/png;base64,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";
+const DC_BUS_V = 400;
+const ALL_MODES = ["normal", "charging", "battery", "bypass"];
+const MODE_LABELS = { normal: "Normal", charging: "Charging", battery: "Battery", bypass: "Bypass" };
+const MODE_COLORS = { normal: C.ok, charging: C.acPath, battery: C.dcBus, bypass: C.bypassPath };
 
-                <div class="control-section">
-                    <h3>Circuit Breakers</h3>
-                    <div class="input-row">
-                        <div class="input-group">
-                            <label>Input CB (A)</label>
-                            <input type="number" id="inputCB" value="50" step="1">
-                        </div>
-                        <div class="input-group">
-                            <label>Output CB (A)</label>
-                            <input type="number" id="outputCB" value="40" step="1">
-                        </div>
-                    </div>
-                </div>
+// ═══════════════════════════════════════════════════
+// CALCULATION ENGINE
+// ═══════════════════════════════════════════════════
+function calcSystem(p, mode) {
+  const r = { pfc: {}, dc: {}, batt: {}, inv: {}, thermal: {}, warnings: [], inputI: 0 };
+  const battV = p.cellV * p.seriesS;
+  const battAh = p.cellAh * p.parallelP;
+  const battMaxI = p.maxCellI * p.parallelP;
+  const eodV = p.minCellV * p.seriesS;
+  const pf = p.phase === "three" ? Math.sqrt(3) : 1;
 
-                <div class="control-section">
-                    <h3>Battery Specifications</h3>
-                    <div class="input-row">
-                        <div class="input-group">
-                            <label>Cell Voltage (V)</label>
-                            <input type="number" id="cellVoltage" value="12" step="0.1">
-                        </div>
-                        <div class="input-group">
-                            <label>Min Cell V (V)</label>
-                            <input type="number" id="minCellVoltage" value="10.5" step="0.1">
-                        </div>
-                    </div>
-                    <div class="input-group">
-                        <label>End of Discharge Voltage (V)</label>
-                        <input type="number" id="endOfDischargeVoltage" value="105" step="0.1">
-                    </div>
-                    <div class="input-row">
-                        <div class="input-group">
-                            <label>Cell Capacity (Ah)</label>
-                            <input type="number" id="cellCapacity" value="10" step="1">
-                        </div>
-                        <div class="input-group">
-                            <label>Max Cell I (A)</label>
-                            <input type="number" id="maxCellCurrent" value="50" step="1">
-                        </div>
-                    </div>
-                    <div class="input-row">
-                        <div class="input-group">
-                            <label>Series Count (S)</label>
-                            <input type="number" id="seriesCount" value="10" step="1" min="1">
-                        </div>
-                        <div class="input-group">
-                            <label>Parallel Count (P)</label>
-                            <input type="number" id="parallelCount" value="1" step="1" min="1">
-                        </div>
-                    </div>
-                    <div class="input-group">
-                        <label>Peukert Coefficient (n)</label>
-                        <input type="number" id="peukertCoefficient" value="1.2" step="0.01" min="1.0" max="1.5">
-                        <small style="color: #666; font-size: 0.85em; display: block; margin-top: 4px;">Lead-acid: 1.1-1.3 | Lithium: ~1.0-1.05</small>
-                    </div>
-                </div>
+  r.batt.voltage = battV; r.batt.capacity = battAh; r.batt.maxI = battMaxI;
+  r.batt.eodV = eodV;
 
-                <div class="control-section">
-                    <h3>Runtime Graph Scale</h3>
-                    <div class="input-row">
-                        <div class="input-group">
-                            <label>Start Load (W)</label>
-                            <input type="number" id="graphStartLoad" value="333" step="10" min="0">
-                        </div>
-                        <div class="input-group">
-                            <label>End Load (W)</label>
-                            <input type="number" id="graphEndLoad" value="1000" step="10" min="0">
-                        </div>
-                    </div>
-                    <small style="color: #666; font-size: 0.85em;">Note: 0 for End Load uses current system load</small>
-                </div>
+  const loadW = p.overloadOn ? p.loadW * (1 + p.overloadPct / 100) : p.loadW;
+  const gridV = p.lowLine ? p.gridV * (1 - p.vTol / 100) : p.gridV;
 
-                <div class="control-section">
-                    <h3>Thermal Management</h3>
-                    <div class="input-row">
-                        <div class="input-group">
-                            <label>Ambient Temp (°C)</label>
-                            <input type="number" id="ambientTemp" value="25" step="1">
-                        </div>
-                        <div class="input-group">
-                            <label>Max Internal (°C)</label>
-                            <input type="number" id="maxInternalTemp" value="40" step="1">
-                        </div>
-                    </div>
-                </div>
+  // Output stage efficiency: inverter or DC/DC
+  const outEff = p.dcOutput ? p.dcDcEff : p.invEff;
+  const outV = p.dcOutput ? p.dcOutV : p.outV;
 
-                <div class="control-section">
-                    <h3>Input Conditions</h3>
-                    <div class="input-group">
-                        <label>Input Voltage Tolerance (%)</label>
-                        <input type="number" id="voltageTolerance" value="15" step="0.1" min="0" max="50">
-                    </div>
-                    <div class="input-group">
-                        <label style="display: flex; align-items: center; gap: 8px;">
-                            <input type="checkbox" id="lowLineMode" style="width: auto;">
-                            <span>Low Line Mode (Reduced Input Voltage)</span>
-                        </label>
-                    </div>
-                    <div class="input-group">
-                        <label>Overload (%)</label>
-                        <input type="number" id="overloadPercent" value="0" step="1" min="0" max="200">
-                    </div>
-                    <div class="input-group">
-                        <label style="display: flex; align-items: center; gap: 8px;">
-                            <input type="checkbox" id="overloadMode" style="width: auto;">
-                            <span>Enable Overload Condition</span>
-                        </label>
-                    </div>
-                </div>
+  // Transformer: skip if WRPFC
+  const xfmrEff = p.wrpfc ? 100 : p.xfmrEff;
+  const pfcInV = p.wrpfc ? gridV : gridV * p.turnsR;
 
-                <div class="control-section">
-                    <h3>Operating Mode</h3>
-                    <div class="mode-selector">
-                        <button class="mode-btn active" data-mode="normal">Normal</button>
-                        <button class="mode-btn" data-mode="charging">Charging</button>
-                        <button class="mode-btn" data-mode="battery">Battery</button>
-                        <button class="mode-btn" data-mode="bypass">Bypass</button>
-                    </div>
-                </div>
-            </div>
+  if (mode === "normal" || mode === "charging") {
+    const outInP = loadW / (outEff / 100);
+    const pfcInP_load = outInP / (p.pfcEff / 100);
+    let chargerInP = 0, chargingPAtBatt = 0, chargingI = 0;
+    if (mode === "charging") {
+      const maxChgI = p.chargerMaxW / eodV;
+      chargingI = Math.min(maxChgI, p.chargerMaxW / battV);
+      chargingPAtBatt = chargingI * battV;
+      chargerInP = chargingPAtBatt / (p.chargerEff / 100);
+    }
+    const totalPfcIn = pfcInP_load + (chargerInP / (p.pfcEff / 100));
+    const pfcI = totalPfcIn / (pf * pfcInV);
+    r.pfc = { voltage: pfcInV, current: pfcI, power: totalPfcIn };
+    r.inputI = p.wrpfc ? pfcI : totalPfcIn / (xfmrEff / 100) / (pf * gridV);
+    const dcP = totalPfcIn * (p.pfcEff / 100);
+    r.dc = { voltage: DC_BUS_V, current: dcP / DC_BUS_V, power: dcP };
+    r.inv = { voltage: outV, power: loadW };
+    if (p.dcOutput) {
+      r.inv.current = loadW / outV; r.inv.va = loadW;
+    } else if (p.reactiveOn) {
+      r.inv.current = p.outVA / outV; r.inv.va = p.outVA;
+      if (loadW > p.outVA) r.warnings.push(`W (${loadW}) exceeds VA rating (${p.outVA})`);
+    } else { r.inv.current = loadW / outV; r.inv.va = loadW; }
+    r.batt.current = chargingI; r.batt.power = chargingPAtBatt; r.batt.chargingP = chargingPAtBatt;
+    r.batt.eodI = 0;
+  } else if (mode === "battery") {
+    const outInP = loadW / (outEff / 100);
+    const boostInP = outInP / (p.boostEff / 100);
+    r.batt.current = boostInP / battV; r.batt.power = boostInP; r.batt.chargingP = 0;
+    r.dc = { voltage: DC_BUS_V, current: outInP / DC_BUS_V, power: outInP };
+    r.inv = { voltage: outV, power: loadW };
+    if (p.dcOutput) {
+      r.inv.current = loadW / outV; r.inv.va = loadW;
+    } else if (p.reactiveOn) {
+      r.inv.current = p.outVA / outV; r.inv.va = p.outVA;
+      if (loadW > p.outVA) r.warnings.push(`W (${loadW}) exceeds VA rating (${p.outVA})`);
+    } else { r.inv.current = loadW / outV; r.inv.va = loadW; }
+    r.pfc = { voltage: 0, current: 0, power: 0 }; r.inputI = 0;
+    // EOD current: discharge current at end-of-discharge voltage
+    const eodI = boostInP / eodV;
+    r.batt.eodI = eodI;
+    if (eodI > battMaxI) r.warnings.push(`Discharge I at EOD (${eodI.toFixed(1)}A) exceeds max pack I (${battMaxI}A = ${p.maxCellI}A × ${p.parallelP}P)`);
+  } else {
+    // Bypass mode
+    r.inv = { voltage: outV, power: loadW };
+    if (p.dcOutput) {
+      r.inv.current = loadW / outV; r.inv.va = loadW;
+    } else if (p.reactiveOn) {
+      r.inv.current = p.outVA / outV; r.inv.va = p.outVA;
+    } else { r.inv.current = loadW / outV; r.inv.va = loadW; }
+    r.inputI = r.inv.va / (xfmrEff / 100) / (pf * gridV);
+    r.pfc = { voltage: 0, current: 0, power: 0 };
+    r.dc = { voltage: 0, current: 0, power: 0 };
+    r.batt = { ...r.batt, current: 0, power: 0, chargingP: 0, eodI: 0 };
+  }
 
-            <!-- Visualization Area -->
-            <div class="visualization-area">
-                <!-- Block Diagram -->
-                <div class="canvas-container">
-                    <h2>System Block Diagram & Energy Flow</h2>
-                    <canvas id="diagramCanvas"></canvas>
-                </div>
+  // CB checks
+  if (r.inputI > p.inputCB) r.warnings.push(`Input CB trip: ${r.inputI.toFixed(1)}A > ${p.inputCB}A`);
+  if (r.inv.current > p.outputCB) r.warnings.push(`Output CB trip: ${r.inv.current.toFixed(1)}A > ${p.outputCB}A`);
 
-                <!-- Dashboard -->
-                <div class="dashboard">
-                    <h2>Real-Time Electrical Data</h2>
-                    <div class="data-grid">
-                        <div class="data-card">
-                            <h4>PFC Input (Post-Transformer)</h4>
-                            <div class="data-row">
-                                <span class="data-label">Voltage:
-                                    <span class="data-formula" id="pfcInputVoltageFormula"></span>
-                                </span>
-                                <span class="data-value" id="pfcInputVoltage">0 V</span>
-                            </div>
-                            <div class="data-row">
-                                <span class="data-label">Current:
-                                    <span class="data-formula" id="pfcInputCurrentFormula"></span>
-                                </span>
-                                <span class="data-value" id="pfcInputCurrent">0 A</span>
-                            </div>
-                            <div class="data-row">
-                                <span class="data-label">Power:
-                                    <span class="data-formula" id="pfcInputPowerFormula"></span>
-                                </span>
-                                <span class="data-value" id="pfcInputPower">0 W</span>
-                            </div>
-                        </div>
+  // Fuse checks
+  const chargerFuseI = (r.batt.chargingP > 0) ? (r.batt.chargingP / (p.chargerEff / 100)) / DC_BUS_V : 0;
+  r.chargerFuseI = chargerFuseI;
+  r.chargerFuseBlown = chargerFuseI > p.chargerFuse;
+  if (r.chargerFuseBlown) r.warnings.push(`CHARGER FUSE BLOWN: ${chargerFuseI.toFixed(2)}A exceeds ${p.chargerFuse}A rating`);
 
-                        <div class="data-card">
-                            <h4>DC Bus</h4>
-                            <div class="data-row">
-                                <span class="data-label">Voltage:
-                                    <span class="data-formula">Fixed at 400V</span>
-                                </span>
-                                <span class="data-value" id="dcBusVoltage">400 V</span>
-                            </div>
-                            <div class="data-row">
-                                <span class="data-label">Current:
-                                    <span class="data-formula" id="dcBusCurrentFormula"></span>
-                                </span>
-                                <span class="data-value" id="dcBusCurrent">0 A</span>
-                            </div>
-                            <div class="data-row">
-                                <span class="data-label">Power:
-                                    <span class="data-formula" id="dcBusPowerFormula"></span>
-                                </span>
-                                <span class="data-value" id="dcBusPower">0 W</span>
-                            </div>
-                        </div>
+  const boostFuseI = (mode === "battery" && r.dc.power > 0) ? r.dc.current : 0;
+  r.boostFuseI = boostFuseI;
+  r.boostFuseBlown = boostFuseI > p.boostFuse;
+  if (r.boostFuseBlown) r.warnings.push(`BOOST FUSE BLOWN: ${boostFuseI.toFixed(2)}A exceeds ${p.boostFuse}A rating`);
 
-                        <div class="data-card">
-                            <h4>Battery Terminals</h4>
-                            <div class="data-row">
-                                <span class="data-label">Voltage:
-                                    <span class="data-formula" id="batteryVoltageFormula"></span>
-                                </span>
-                                <span class="data-value" id="batteryVoltage">0 V</span>
-                            </div>
-                            <div class="data-row">
-                                <span class="data-label">Current:
-                                    <span class="data-formula" id="batteryCurrentFormula"></span>
-                                </span>
-                                <span class="data-value" id="batteryCurrent">0 A</span>
-                            </div>
-                            <div class="data-row">
-                                <span class="data-label">Power:
-                                    <span class="data-formula" id="batteryPowerFormula"></span>
-                                </span>
-                                <span class="data-value" id="batteryPower">0 W</span>
-                            </div>
-                        </div>
+  // Max discharge check (maxCellI per string × parallel)
+  r.batt.dischExceeded = (r.batt.current > 0 && mode === "battery" && r.batt.current > battMaxI);
+  if (r.batt.dischExceeded) r.warnings.push(`DISCHARGE LIMIT: ${r.batt.current.toFixed(1)}A exceeds max pack I ${battMaxI}A (${p.maxCellI}A × ${p.parallelP}P)`);
 
-                        <div class="data-card">
-                            <h4>Inverter Output (Load)</h4>
-                            <div class="data-row">
-                                <span class="data-label">Voltage:
-                                    <span class="data-formula">Output voltage</span>
-                                </span>
-                                <span class="data-value" id="inverterOutputVoltage">0 V</span>
-                            </div>
-                            <div class="data-row">
-                                <span class="data-label">Current:
-                                    <span class="data-formula" id="inverterOutputCurrentFormula"></span>
-                                </span>
-                                <span class="data-value" id="inverterOutputCurrent">0 A</span>
-                            </div>
-                            <div class="data-row">
-                                <span class="data-label">Power:
-                                    <span class="data-formula">Real power (W)</span>
-                                </span>
-                                <span class="data-value" id="inverterOutputPower">0 W</span>
-                            </div>
-                            <div class="data-row">
-                                <span class="data-label">Apparent Power:
-                                    <span class="data-formula" id="apparentPowerFormula"></span>
-                                </span>
-                                <span class="data-value" id="apparentPower">0 VA</span>
-                            </div>
-                        </div>
+  // Thermal
+  let heat = 0;
+  if (r.pfc.power > 0 && !p.wrpfc) heat += (r.pfc.power / (p.xfmrEff / 100)) - r.pfc.power;
+  if (r.dc.power > 0 && r.pfc.power > 0) heat += r.pfc.power - r.dc.power;
+  if (r.inv.power > 0) { const iip = r.inv.power / (outEff / 100); heat += iip - r.inv.power; }
+  if (r.batt.chargingP > 0) { const cip = r.batt.chargingP / (p.chargerEff / 100); heat += cip - r.batt.chargingP; }
+  if (mode === "battery" && r.batt.power > 0) { heat += r.batt.power * (1 - p.boostEff / 100); }
+  const dT = p.maxTemp - p.ambTemp;
+  r.thermal = { heat, cfm: dT > 0 ? (3.16 * heat) / dT : 0, dT };
 
-                        <div class="data-card" style="border-left-color: #e74c3c;">
-                            <h4>🌡️ Thermal Analysis</h4>
-                            <div class="data-row">
-                                <span class="data-label">Heat Dissipated:
-                                    <span class="data-formula">Σ(losses from inefficiencies)</span>
-                                </span>
-                                <span class="data-value" id="heatDissipated">0 W</span>
-                            </div>
-                            <div class="data-row">
-                                <span class="data-label">Required Airflow:
-                                    <span class="data-formula" id="requiredCFMFormula"></span>
-                                </span>
-                                <span class="data-value" id="requiredCFM">0 CFM</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+  return r;
+}
 
-                <!-- Runtime Graph -->
-                <div class="canvas-container">
-                    <h2>Runtime vs. Load Analysis</h2>
-                    <canvas id="graphCanvas"></canvas>
-                    
-                    <!-- Runtime Calculator -->
-                    <div style="margin-top: 15px; padding: 15px; background: #f8f9fa; border-radius: 6px; border: 2px solid #e0e0e0;">
-                        <h4 style="margin: 0 0 10px 0; color: #2c3e50; font-size: 0.95em;">Runtime Calculator</h4>
-                        <div style="display: grid; grid-template-columns: 1fr 1fr auto; gap: 10px; align-items: end;">
-                            <div class="input-group" style="margin: 0;">
-                                <label>Load Value</label>
-                                <input type="number" id="runtimeCalcLoad" placeholder="e.g., 500" step="10" min="0">
-                            </div>
-                            <div class="input-group" style="margin: 0;">
-                                <label>Unit</label>
-                                <select id="runtimeCalcUnit" style="width: 100%; padding: 8px 12px; border: 2px solid #ddd; border-radius: 4px; font-size: 0.95em;">
-                                    <option value="watts">Watts (W)</option>
-                                    <option value="percent">Percent (%)</option>
-                                </select>
-                            </div>
-                            <button id="clearRuntimeCalc" style="padding: 8px 16px; background: #e74c3c; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; height: 38px;" title="Clear calculator">Clear</button>
-                        </div>
-                        <div id="runtimeCalcResult" style="margin-top: 12px; padding: 10px; background: white; border-radius: 4px; border: 2px solid #667eea; font-size: 0.95em; min-height: 24px; display: none;">
-                            <strong style="color: #667eea;">Runtime:</strong> <span id="runtimeCalcValue" style="color: #2c3e50; font-weight: bold;"></span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
+function calcRuntime(p, loadW) {
+  const battV = p.cellV * p.seriesS;
+  const battAh = p.cellAh * p.parallelP;
+  const eodV = p.minCellV * p.seriesS;
+  const avgV = (battV + eodV) / 2; // average voltage during discharge
+  const eff = (p.boostEff / 100) * ((p.dcOutput ? p.dcDcEff : p.invEff) / 100);
+  if (loadW <= 0 || avgV <= 0 || eff <= 0) return 0;
+
+  // Discharge current at average voltage
+  const dischI = loadW / (eff * avgV);
+  if (dischI <= 0) return 0;
+
+  // Peukert: rated Ah is capacity at C/20 rate to EOD
+  // Effective Ah at actual discharge rate = rated × (I_rated / I_actual)^(n-1)
+  const ratedI = battAh / 20;
+  const pk = Math.pow(ratedI / dischI, p.peukert - 1);
+  const effAh = battAh * pk;
+
+  // Runtime = effective Ah / discharge current, in minutes
+  return (effAh / dischI) * 60;
+}
+
+// ═══════════════════════════════════════════════════
+// INPUT FIELD COMPONENT
+// ═══════════════════════════════════════════════════
+const F = ({ label, value, onChange, step = 1, min, unit, small }) => (
+  <div style={{ marginBottom: 8 }}>
+    <label style={{ display: "block", fontSize: 10, color: C.sub, marginBottom: 3, letterSpacing: 0.5 }}>{label}</label>
+    <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
+      <input type="number" value={value} step={step} min={min}
+        onChange={e => onChange(parseFloat(e.target.value) || 0)}
+        style={{ flex: 1, background: C.inputBg, border: `1px solid ${C.border}`, borderRadius: 4,
+          padding: "5px 8px", color: C.text, fontSize: 13, outline: "none", fontFamily: "'JetBrains Mono', monospace",
+          width: "100%" }} />
+      {unit && <span style={{ fontSize: 10, color: C.muted, minWidth: 20 }}>{unit}</span>}
     </div>
+    {small && <div style={{ fontSize: 9, color: C.muted, marginTop: 2 }}>{small}</div>}
+  </div>
+);
 
-    <script>
-        // ============================================
-        // GLOBAL STATE AND CONFIGURATION
-        // ============================================
-        const state = {
-            mode: 'normal',
-            warnings: [],
-            particles: [],
-            animationId: null,
-            graphPoints: [],
-            graphBounds: null,
-            hoveredPoint: null,
-            calculatorActive: false
-        };
+const Chk = ({ label, checked, onChange, note }) => (
+  <div style={{ marginBottom: 8 }}>
+    <label style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 11, color: C.sub, cursor: "pointer" }}>
+      <input type="checkbox" checked={checked} onChange={e => onChange(e.target.checked)}
+        style={{ accentColor: C.acPath }} />
+      {label}
+    </label>
+    {note && <div style={{ fontSize: 9, color: C.muted, marginTop: 2, marginLeft: 20 }}>{note}</div>}
+  </div>
+);
 
-        const DC_BUS_VOLTAGE = 400; // Fixed DC bus voltage
-        const SQRT3 = Math.sqrt(3);
+const Sel = ({ label, value, onChange, options }) => (
+  <div style={{ marginBottom: 8 }}>
+    <label style={{ display: "block", fontSize: 10, color: C.sub, marginBottom: 3 }}>{label}</label>
+    <select value={value} onChange={e => onChange(e.target.value)}
+      style={{ width: "100%", background: C.inputBg, border: `1px solid ${C.border}`, borderRadius: 4,
+        padding: "5px 8px", color: C.text, fontSize: 13, outline: "none", fontFamily: "'JetBrains Mono', monospace" }}>
+      {options.map(o => <option key={o.v} value={o.v}>{o.l}</option>)}
+    </select>
+  </div>
+);
 
-        function getPhaseFactor(inputs) {
-            return inputs.inputPhase === 'three' ? SQRT3 : 1;
-        }
+const Section = ({ title, children, color = C.acPath }) => (
+  <div style={{ marginBottom: 16 }}>
+    <div style={{ fontSize: 11, fontWeight: 700, color, letterSpacing: 1.5, textTransform: "uppercase",
+      borderBottom: `1px solid ${color}33`, paddingBottom: 4, marginBottom: 10 }}>{title}</div>
+    {children}
+  </div>
+);
 
-        // ============================================
-        // ELECTRICAL CALCULATIONS ENGINE
-        // ============================================
-        function calculateSystem() {
-            const inputs = getInputs();
-            const results = {
-                pfcInput: {},
-                dcBus: {},
-                battery: {},
-                inverterOutput: {},
-                warnings: []
-            };
+const Row = ({ children }) => (
+  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>{children}</div>
+);
 
-            // Battery Configuration
-            const batteryVoltage = inputs.cellVoltage * inputs.seriesCount;
-            const batteryCapacity = inputs.cellCapacity * inputs.parallelCount; // Ah
-            const batteryMaxCurrent = inputs.maxCellCurrent * inputs.parallelCount; // A
-            const minBatteryVoltage = inputs.minCellVoltage * inputs.seriesCount;
+// ═══════════════════════════════════════════════════
+// SVG BLOCK DIAGRAM
+// ═══════════════════════════════════════════════════
+const Block = ({ x, y, w, h, label, sub, color, active = true, tripped }) => {
+  const [hov, setHov] = useState(false);
+  const fill = tripped ? C.warn : (active ? color : C.muted);
+  const op = active ? 1 : 0.35;
+  return (
+    <g onMouseEnter={() => setHov(true)} onMouseLeave={() => setHov(false)} opacity={op}>
+      <rect x={x} y={y} width={w} height={h} rx={6} fill={C.cardBg} stroke={fill}
+        strokeWidth={hov ? 2.5 : 1.5} style={{ transition: "all 0.15s" }} />
+      <rect x={x} y={y} width={w} height={3} rx={1.5} fill={fill} opacity={0.9} />
+      <text x={x + w / 2} y={y + h / 2 - (sub ? 5 : 0) + 3} textAnchor="middle" fill={C.text}
+        fontSize={11} fontWeight="700" fontFamily="'JetBrains Mono', monospace">{label}</text>
+      {sub && <text x={x + w / 2} y={y + h / 2 + 13} textAnchor="middle" fill={C.sub}
+        fontSize={8} fontFamily="'JetBrains Mono', monospace">{sub}</text>}
+    </g>
+  );
+};
 
-            // Mode-specific calculations
-            switch(state.mode) {
-                case 'normal':
-                    calculateNormalMode(inputs, results);
-                    break;
-                case 'charging':
-                    calculateChargingMode(inputs, results, batteryVoltage);
-                    break;
-                case 'battery':
-                    calculateBatteryMode(inputs, results, batteryVoltage, minBatteryVoltage, batteryMaxCurrent);
-                    break;
-                case 'bypass':
-                    calculateBypassMode(inputs, results);
-                    break;
+const CBSymbol = ({ x, y, label, active = true, tripped, rating }) => {
+  const col = tripped ? C.warn : (active ? C.cb : C.muted);
+  return (
+    <g opacity={active ? 1 : 0.35}>
+      <rect x={x - 18} y={y - 15} width={36} height={30} rx={5} fill={C.cardBg} stroke={col} strokeWidth={1.5} />
+      <circle cx={x - 6} cy={y} r={2.5} fill={col} /><circle cx={x + 6} cy={y} r={2.5} fill={col} />
+      <line x1={x - 6} y1={y} x2={x + 4} y2={y - 8} stroke={col} strokeWidth={1.5} />
+      <text x={x} y={y + 24} textAnchor="middle" fill={col} fontSize={7.5} fontWeight="700"
+        fontFamily="'JetBrains Mono', monospace">{label}</text>
+      {rating && <text x={x} y={y + 34} textAnchor="middle" fill={tripped ? C.warn : C.sub} fontSize={7}
+        fontWeight="700" fontFamily="'JetBrains Mono', monospace">{rating}A</text>}
+    </g>
+  );
+};
+
+const FuseSymbol = ({ x, y, active = true, blown = false, rating, label }) => {
+  const col = blown ? C.warn : C.fuse;
+  return (
+    <g opacity={active ? 1 : 0.35}>
+      <rect x={x - 8} y={y - 13} width={16} height={26} rx={4} fill={blown ? C.warn + "22" : C.cardBg} stroke={col} strokeWidth={blown ? 2 : 1.2} />
+      {blown ? <>
+        <line x1={x - 4} y1={y - 4} x2={x + 4} y2={y + 4} stroke={C.warn} strokeWidth={2} />
+        <line x1={x + 4} y1={y - 4} x2={x - 4} y2={y + 4} stroke={C.warn} strokeWidth={2} />
+      </> : <>
+        <line x1={x} y1={y - 7} x2={x} y2={y + 7} stroke={col} strokeWidth={1.5} />
+        <circle cx={x} cy={y} r={2} fill={col} />
+      </>}
+      <text x={x + 14} y={y - 2} textAnchor="start" fill={col} fontSize={6.5} fontWeight="700"
+        fontFamily="'JetBrains Mono', monospace">{label || "F"}</text>
+      {rating && <text x={x + 14} y={y + 7} textAnchor="start" fill={blown ? C.warn : C.sub} fontSize={6}
+        fontFamily="'JetBrains Mono', monospace">{rating}A</text>}
+    </g>
+  );
+};
+
+const BattIcon = ({ x, y, active = true, parallelP = 1, seriesS = 1, battV, config }) => {
+  const stringsToShow = Math.min(parallelP, 4);
+  const stringH = 26;
+  const totalW = 70;
+  const totalH = 8 + stringsToShow * (stringH + 4);
+  return (
+    <g opacity={active ? 1 : 0.35}>
+      <rect x={x} y={y} width={totalW} height={totalH} rx={5} fill={C.cardBg} stroke={C.battPath} strokeWidth={1.5} />
+      {/* Positive terminal on top */}
+      <rect x={x + totalW / 2 - 6} y={y - 4} width={12} height={4} rx={1.5} fill={C.battPath} opacity={0.6} />
+      {/* Draw each parallel string vertically */}
+      {Array.from({ length: stringsToShow }, (_, si) => {
+        const sy = y + 6 + si * (stringH + 4);
+        const cellsToShow = Math.min(seriesS, 4);
+        const cellW = Math.min(12, (totalW - 16) / cellsToShow);
+        return (
+          <g key={si}>
+            <rect x={x + 4} y={sy} width={totalW - 8} height={stringH} rx={3} fill={C.battPath + "0a"} stroke={C.battPath} strokeWidth={0.5} strokeDasharray="2,2" />
+            {Array.from({ length: cellsToShow }, (_, ci) => (
+              <rect key={ci} x={x + 6 + ci * cellW} y={sy + 3} width={cellW - 2} height={stringH - 6} rx={1.5}
+                fill={C.battPath} opacity={0.15 + ci * 0.15} />
+            ))}
+            <text x={x + totalW - 8} y={sy + stringH / 2 + 3} textAnchor="end" fill={C.battPath} fontSize={5.5} opacity={0.6}
+              fontFamily="'JetBrains Mono', monospace">P{si + 1}</text>
+          </g>
+        );
+      })}
+      {parallelP > 4 && (
+        <text x={x + totalW / 2} y={y + totalH - 4} textAnchor="middle" fill={C.battPath} fontSize={8} fontWeight="700"
+          fontFamily="'JetBrains Mono', monospace">+{parallelP - 4}...</text>
+      )}
+      {/* Labels below */}
+      <text x={x + totalW / 2} y={y + totalH + 12} textAnchor="middle" fill={C.text} fontSize={10} fontWeight="700"
+        fontFamily="'JetBrains Mono', monospace">BATTERY</text>
+      <text x={x + totalW / 2} y={y + totalH + 23} textAnchor="middle" fill={C.battPath} fontSize={8} fontWeight="700"
+        fontFamily="'JetBrains Mono', monospace">{battV || (seriesS * 12).toFixed(0)}V · {config || `${seriesS}S${parallelP}P`}</text>
+    </g>
+  );
+};
+
+const BypassRly = ({ x, y, active }) => (
+  <g opacity={active ? 1 : 0.35}>
+    <rect x={x - 24} y={y - 16} width={48} height={32} rx={5} fill={C.cardBg} stroke={C.bypassPath} strokeWidth={1.5} />
+    <circle cx={x - 8} cy={y} r={2.5} fill="none" stroke={C.bypassPath} strokeWidth={1.2} />
+    <circle cx={x + 8} cy={y} r={2.5} fill="none" stroke={C.bypassPath} strokeWidth={1.2} />
+    <line x1={x - 5.5} y1={y} x2={x + 5.5} y2={y} stroke={C.bypassPath} strokeWidth={1.2} strokeDasharray="2.5,2" />
+    <text x={x} y={y + 26} textAnchor="middle" fill={C.bypassPath} fontSize={7.5} fontWeight="700"
+      fontFamily="'JetBrains Mono', monospace">BYPASS</text>
+  </g>
+);
+
+// Animated flow dots
+const FlowDot = ({ x1, y1, x2, y2, color, delay = 0, dur = 2, active }) => {
+  if (!active) return null;
+  return (
+    <circle r={3} fill={color} opacity={0.9}>
+      <animate attributeName="cx" from={x1} to={x2} dur={`${dur}s`} begin={`${delay}s`} repeatCount="indefinite" />
+      <animate attributeName="cy" from={y1} to={y2} dur={`${dur}s`} begin={`${delay}s`} repeatCount="indefinite" />
+      <animate attributeName="opacity" values="0;0.9;0.9;0" dur={`${dur}s`} begin={`${delay}s`} repeatCount="indefinite" />
+    </circle>
+  );
+};
+
+// ═══════════════════════════════════════════════════
+// SVG LINE CHART (replaces Recharts)
+// ═══════════════════════════════════════════════════
+const RuntimeChart = ({ data, highlight, width = 800, height = 280 }) => {
+  const [hover, setHover] = useState(null);
+  const pad = { t: 20, r: 20, b: 35, l: 55 };
+  const cw = width - pad.l - pad.r;
+  const ch = height - pad.t - pad.b;
+  if (!data || data.length < 2) return null;
+
+  const xMin = data[0].load, xMax = data[data.length - 1].load;
+  const yMax = Math.max(...data.map(d => d.runtime)) * 1.1 || 1;
+  const yMin = 0;
+
+  const scX = v => pad.l + ((v - xMin) / (xMax - xMin)) * cw;
+  const scY = v => pad.t + ch - ((v - yMin) / (yMax - yMin)) * ch;
+
+  // Build path
+  const pts = data.map(d => `${scX(d.load)},${scY(d.runtime)}`);
+  const pathD = `M${pts.join("L")}`;
+
+  // Ticks
+  const xTicks = 6, yTicks = 5;
+  const niceStep = (range, count) => { const raw = range / count; const mag = Math.pow(10, Math.floor(Math.log10(raw))); const opts = [1,2,5,10]; return mag * opts.find(o => o * mag >= raw) || raw; };
+  const xStep = niceStep(xMax - xMin, xTicks);
+  const yStep = niceStep(yMax - yMin, yTicks);
+  const xTickVals = []; for (let v = Math.ceil(xMin / xStep) * xStep; v <= xMax; v += xStep) xTickVals.push(v);
+  const yTickVals = []; for (let v = 0; v <= yMax; v += yStep) yTickVals.push(v);
+
+  const font = "'JetBrains Mono', monospace";
+
+  return (
+    <svg width="100%" viewBox={`0 0 ${width} ${height}`} style={{ display: "block" }}
+      onMouseMove={e => {
+        const rect = e.currentTarget.getBoundingClientRect();
+        const mx = ((e.clientX - rect.left) / rect.width) * width;
+        const loadVal = xMin + ((mx - pad.l) / cw) * (xMax - xMin);
+        const closest = data.reduce((best, d) => Math.abs(d.load - loadVal) < Math.abs(best.load - loadVal) ? d : best, data[0]);
+        setHover(closest);
+      }}
+      onMouseLeave={() => setHover(null)}>
+      {/* Grid */}
+      {xTickVals.map(v => <line key={`xg${v}`} x1={scX(v)} y1={pad.t} x2={scX(v)} y2={pad.t + ch} stroke={C.border} strokeDasharray="3,3" />)}
+      {yTickVals.map(v => <line key={`yg${v}`} x1={pad.l} y1={scY(v)} x2={pad.l + cw} y2={scY(v)} stroke={C.border} strokeDasharray="3,3" />)}
+      {/* Axes */}
+      <line x1={pad.l} y1={pad.t} x2={pad.l} y2={pad.t + ch} stroke={C.sub} strokeWidth={1} />
+      <line x1={pad.l} y1={pad.t + ch} x2={pad.l + cw} y2={pad.t + ch} stroke={C.sub} strokeWidth={1} />
+      {/* X tick labels */}
+      {xTickVals.map(v => <text key={`xl${v}`} x={scX(v)} y={pad.t + ch + 16} textAnchor="middle" fill={C.sub} fontSize={9} fontFamily={font}>{v}W</text>)}
+      {/* Y tick labels */}
+      {yTickVals.map(v => <text key={`yl${v}`} x={pad.l - 8} y={scY(v) + 3} textAnchor="end" fill={C.sub} fontSize={9} fontFamily={font}>{v.toFixed(0)}m</text>)}
+      {/* Data line */}
+      <path d={pathD} fill="none" stroke={C.acPath} strokeWidth={2.5} strokeLinejoin="round" />
+      {/* Filled area */}
+      <path d={`${pathD}L${scX(xMax)},${pad.t + ch}L${scX(xMin)},${pad.t + ch}Z`} fill={C.acPath} opacity={0.08} />
+      {/* Highlight point (calc result) */}
+      {highlight && <circle cx={scX(highlight.load)} cy={scY(highlight.runtime)} r={6} fill={C.dcBus} stroke={C.dcBus} strokeWidth={2} />}
+      {/* Hover tooltip */}
+      {hover && <>
+        <line x1={scX(hover.load)} y1={pad.t} x2={scX(hover.load)} y2={pad.t + ch} stroke={C.acPath} strokeWidth={1} strokeDasharray="3,3" opacity={0.5} />
+        <circle cx={scX(hover.load)} cy={scY(hover.runtime)} r={4} fill={C.acPath} />
+        <rect x={scX(hover.load) + 8} y={scY(hover.runtime) - 22} width={110} height={28} rx={4} fill={C.panelBg} stroke={C.border} />
+        <text x={scX(hover.load) + 14} y={scY(hover.runtime) - 7} fill={C.text} fontSize={9} fontFamily={font} fontWeight="700">
+          {hover.load}W → {hover.runtime.toFixed(1)} min
+        </text>
+      </>}
+      {/* Axis labels */}
+      <text x={pad.l + cw / 2} y={height - 2} textAnchor="middle" fill={C.sub} fontSize={9} fontFamily={font}>Load (W)</text>
+      <text x={12} y={pad.t + ch / 2} textAnchor="middle" fill={C.sub} fontSize={9} fontFamily={font}
+        transform={`rotate(-90, 12, ${pad.t + ch / 2})`}>Runtime (min)</text>
+    </svg>
+  );
+};
+
+function Diagram({ mode, results, params, isPrint = false }) {
+  const r = results;
+  const W = 860;
+  const MY = 145, BH = 52;
+  const busY = MY + BH / 2;
+  const isNorm = mode === "normal" || mode === "charging";
+  const isBatt = mode === "battery";
+  const isByp = mode === "bypass";
+  const mainActive = !isByp;
+  const battActive = isBatt || mode === "charging";
+  const bypassHidden = params.wrpfc || params.dcOutput;
+  const inputTrip = results.inputI > 0 && results.warnings.some(w => w.includes("Input CB"));
+  const outputTrip = results.warnings.some(w => w.includes("Output CB"));
+
+  const isWrpfc = params.wrpfc;
+  const isDcOut = params.dcOutput;
+
+  const cbIn = 52;
+  const xfmr = isWrpfc ? -200 : 88;
+  const pfc = isWrpfc ? 88 : 245;
+  const pfcW = isWrpfc ? 140 : 115;
+  const busX1 = isWrpfc ? 255 : 385;
+  const busX2 = isWrpfc ? 500 : 575;
+  const inv = isWrpfc ? 520 : 595;
+  const cbOut = isWrpfc ? 680 : 755;
+  const byY = 52, byRlyX = isWrpfc ? 395 : 470;
+  const convY = 290;
+  const boostX = isWrpfc ? 320 : 430;
+  const chgX = isWrpfc ? 500 : 575;
+  const fuseY = busY + 35;
+  // Battery - fixed width, vertical layout
+  const battW = 70;
+  const battX = Math.round((boostX + chgX) / 2 - battW / 2);
+  const battY = convY + BH + 15;
+  const battStrings = Math.min(params.parallelP, 4);
+  const battIconH = 8 + battStrings * 30; // matches BattIcon totalH
+  const H = Math.max(480, battY + battIconH + 40);
+
+  const gridV = params.lowLine ? params.gridV * (1 - params.vTol / 100) : params.gridV;
+  const outV = isDcOut ? params.dcOutV : params.outV;
+  const battV = (params.cellV * params.seriesS).toFixed(1);
+
+  const mCol = MODE_COLORS[mode];
+
+  const fl = (pts, color, dash, active = true) => active ? (
+    <polyline points={pts} fill="none" stroke={color} strokeWidth={1.8}
+      strokeDasharray={dash ? "5,4" : "none"} opacity={active ? 0.7 : 0.2} />
+  ) : null;
+
+  const dots = (x1, y1, x2, y2, color, count = 3, active = true) =>
+    !isPrint && active ? Array.from({ length: count }, (_, i) => (
+      <FlowDot key={`${x1}${y1}${x2}${y2}${i}`} x1={x1} y1={y1} x2={x2} y2={y2}
+        color={color} delay={i * (1.8 / count)} dur={1.8} active={active} />
+    )) : null;
+
+  return (
+    <svg viewBox={`0 0 ${W} ${H}`} width="100%" style={{ maxWidth: W, background: C.bg, borderRadius: isPrint ? 0 : 10 }}>
+      <defs>
+        {[C.acPath, C.dcBus, C.outputPath, C.battPath, C.bypassPath].map(c => (
+          <marker key={c} id={`a-${c.slice(1)}${isPrint ? "p" : ""}`} viewBox="0 0 10 6" refX="9" refY="3"
+            markerWidth="7" markerHeight="5" orient="auto-start-reverse">
+            <path d="M0 0L10 3L0 6z" fill={c} />
+          </marker>
+        ))}
+      </defs>
+
+      {/* ── AC IN label + voltage ── */}
+      <text x={16} y={busY - 6} fill={C.acPath} fontSize={10} fontWeight="700" textAnchor="middle"
+        fontFamily="'JetBrains Mono', monospace">AC IN</text>
+      <text x={16} y={busY + 8} fill={C.acPath} fontSize={8} textAnchor="middle"
+        fontFamily="'JetBrains Mono', monospace">{gridV.toFixed(0)}V</text>
+
+      {/* ── Main power path lines ── */}
+      {fl(`30,${busY} ${cbIn - 18},${busY}`, C.acPath, false, isNorm || isByp)}
+      {!isWrpfc && fl(`${cbIn + 18},${busY} ${xfmr},${busY}`, C.acPath, false, isNorm || isByp)}
+      {!isWrpfc && fl(`${xfmr + 122},${busY} ${pfc},${busY}`, C.acPath, false, isNorm)}
+      {isWrpfc && fl(`${cbIn + 18},${busY} ${pfc},${busY}`, C.acPath, false, isNorm)}
+      {fl(`${pfc + pfcW},${busY} ${busX1},${busY}`, C.dcBus, false, isNorm)}
+      {fl(`${busX2},${busY} ${inv},${busY}`, isDcOut ? C.dcBus : C.outputPath, false, mainActive)}
+      {fl(`${inv + 120},${busY} ${cbOut - 18},${busY}`, isDcOut ? C.dcBus : C.outputPath, false, mainActive || isByp)}
+      {fl(`${cbOut + 18},${busY} ${cbOut + 50},${busY}`, isDcOut ? C.dcBus : C.outputPath, false, true)}
+
+      {/* DC Bus bar with voltage */}
+      {mainActive && <>
+        <line x1={busX1} y1={busY} x2={busX2} y2={busY} stroke={C.busBar} strokeWidth={4} opacity={0.25} />
+        <line x1={busX1} y1={busY} x2={busX2} y2={busY} stroke={C.busBar} strokeWidth={1.8} />
+        <text x={(busX1 + busX2) / 2} y={busY - 10} textAnchor="middle" fill={C.dcBus} fontSize={10}
+          fontWeight="800" fontFamily="'JetBrains Mono', monospace" letterSpacing="1.5">DC BUS · 400V</text>
+      </>}
+
+      {/* Bypass path */}
+      {!bypassHidden && <>
+        <polyline points={`${pfc - 12},${busY} ${pfc - 12},${byY} ${byRlyX - 24},${byY}`}
+          fill="none" stroke={C.bypassPath} strokeWidth={1.5} strokeDasharray="5,4" opacity={isByp ? 0.8 : 0.2} />
+        <circle cx={pfc - 12} cy={busY} r={3} fill={isByp ? C.bypassPath : C.muted} opacity={isByp ? 0.8 : 0.25} />
+        <polyline points={`${byRlyX + 24},${byY} ${cbOut - 35},${byY} ${cbOut - 35},${busY}`}
+          fill="none" stroke={C.bypassPath} strokeWidth={1.5} strokeDasharray="5,4" opacity={isByp ? 0.8 : 0.2} />
+        <circle cx={cbOut - 35} cy={busY} r={3} fill={isByp ? C.bypassPath : C.muted} opacity={isByp ? 0.8 : 0.25} />
+        <text x={byRlyX} y={byY - 24} textAnchor="middle" fill={C.bypassPath} fontSize={8} fontWeight="700"
+          fontFamily="'JetBrains Mono', monospace" opacity={isByp ? 1 : 0.3}>BYPASS PATH</text>
+      </>}
+
+      {/* Battery subsystem lines */}
+      <line x1={boostX} y1={busY + 3} x2={boostX} y2={fuseY - 13} stroke={C.battPath} strokeWidth={1.5} opacity={battActive ? 0.7 : 0.2} />
+      <line x1={boostX} y1={fuseY + 13} x2={boostX} y2={convY} stroke={C.battPath} strokeWidth={1.5} opacity={battActive ? 0.7 : 0.2} />
+      <line x1={chgX} y1={busY + 3} x2={chgX} y2={fuseY - 13} stroke={C.battPath} strokeWidth={1.5} opacity={battActive ? 0.7 : 0.2} />
+      <line x1={chgX} y1={fuseY + 13} x2={chgX} y2={convY} stroke={C.battPath} strokeWidth={1.5} opacity={battActive ? 0.7 : 0.2} />
+      <polyline points={`${battX + battW / 2},${battY} ${boostX},${battY} ${boostX},${convY + BH}`}
+        fill="none" stroke={C.battPath} strokeWidth={1.5} strokeDasharray="5,4" opacity={isBatt ? 0.7 : 0.2} />
+      <polyline points={`${chgX},${convY + BH} ${chgX},${battY} ${battX + battW / 2},${battY}`}
+        fill="none" stroke={C.battPath} strokeWidth={1.5} strokeDasharray="5,4" opacity={mode === "charging" ? 0.7 : 0.2} />
+
+      {/* ── Flow animation dots ── */}
+      {isNorm && dots(30, busY, cbOut + 50, busY, mCol, 6, true)}
+      {!bypassHidden && isByp && dots(30, busY, pfc - 12, busY, C.bypassPath, 2, true)}
+      {!bypassHidden && isByp && dots(pfc - 12, byY, cbOut - 35, byY, C.bypassPath, 3, true)}
+      {!bypassHidden && isByp && dots(cbOut - 35, busY, cbOut + 50, busY, C.bypassPath, 2, true)}
+      {isBatt && dots(boostX, battY, boostX, busY, C.dcBus, 3, true)}
+      {isBatt && dots(busX1, busY, cbOut + 50, busY, isDcOut ? C.dcBus : C.outputPath, 4, true)}
+      {mode === "charging" && dots(chgX, busY, chgX, battY, C.battPath, 3, true)}
+
+      {/* ── Components with ratings ── */}
+      <CBSymbol x={cbIn} y={busY} label="INPUT CB" active={isNorm || isByp} tripped={inputTrip} rating={params.inputCB} />
+      {!isWrpfc && <Block x={xfmr} y={MY} w={122} h={BH} label="INPUT XFMR" sub="Isolation" color={C.acPath} active={isNorm || isByp} />}
+      <Block x={pfc} y={MY} w={pfcW} h={BH}
+        label={isWrpfc ? "WRPFC" : "PFC"}
+        sub={isWrpfc ? "Wide Range PFC" : "Power Factor Corr."} color={C.acPath} active={isNorm} />
+      <Block x={inv} y={MY} w={120} h={BH}
+        label={isDcOut ? "DC/DC" : "INVERTER"}
+        sub={isDcOut ? `400V→${params.dcOutV}V` : "DC→AC"} color={isDcOut ? C.dcBus : C.outputPath} active={mainActive} />
+      <CBSymbol x={cbOut} y={busY} label="OUTPUT CB" active={true} tripped={outputTrip} rating={params.outputCB} />
+      {!bypassHidden && <BypassRly x={byRlyX} y={byY} active={isByp} />}
+
+      <FuseSymbol x={boostX} y={fuseY} active={battActive} blown={r.boostFuseBlown} rating={params.boostFuse} label="F1" />
+      <FuseSymbol x={chgX} y={fuseY} active={battActive} blown={r.chargerFuseBlown} rating={params.chargerFuse} label="F2" />
+      <Block x={boostX - 52} y={convY} w={104} h={BH} label="BOOST" sub="DC-DC Step Up" color={C.battPath} active={isBatt} />
+      <Block x={chgX - 52} y={convY} w={104} h={BH} label="CHARGER" sub="Charge Ctrl" color={C.battPath} active={mode === "charging"} />
+      <BattIcon x={battX} y={battY} active={battActive} parallelP={params.parallelP} seriesS={params.seriesS}
+        battV={battV} config={`${params.seriesS}S${params.parallelP}P`} />
+
+      {/* Output label + voltage */}
+      <text x={cbOut + 70} y={busY - 6} fill={isDcOut ? C.dcBus : C.outputPath} fontSize={10} fontWeight="700" textAnchor="middle"
+        fontFamily="'JetBrains Mono', monospace">{isDcOut ? "DC OUT" : "AC OUT"}</text>
+      <text x={cbOut + 70} y={busY + 8} fill={isDcOut ? C.dcBus : C.outputPath} fontSize={8} textAnchor="middle"
+        fontFamily="'JetBrains Mono', monospace">{outV}V</text>
+
+      {/* Legend */}
+      <g transform={`translate(15, ${H - 18})`}>
+        {[
+          { c: C.acPath, l: "AC" }, { c: C.dcBus, l: "DC Bus" }, { c: C.battPath, l: "Battery" },
+          { c: isDcOut ? C.dcBus : C.outputPath, l: "Output" }, ...(!bypassHidden ? [{ c: C.bypassPath, l: "Bypass" }] : []), { c: C.cb, l: "CB" }, { c: C.fuse, l: "Fuse" }
+        ].map((it, i) => (
+          <g key={i} transform={`translate(${i * 110}, 0)`}>
+            <rect x={0} y={0} width={10} height={10} rx={2} fill={it.c} opacity={0.8} />
+            <text x={14} y={9} fill={C.sub} fontSize={8} fontFamily="'JetBrains Mono', monospace">{it.l}</text>
+          </g>
+        ))}
+      </g>
+    </svg>
+  );
+}
+
+// ═══════════════════════════════════════════════════
+// TOOLTIP DATA ROW
+// ═══════════════════════════════════════════════════
+const TooltipRow = ({ label, value, warn, tip }) => {
+  const [show, setShow] = useState(false);
+  const [pos, setPos] = useState({ x: 0, y: 0 });
+  const rowRef = useRef(null);
+
+  const onEnter = (e) => {
+    if (!tip || tip.length === 0) return;
+    const rect = e.currentTarget.getBoundingClientRect();
+    setPos({ x: rect.left, y: rect.top });
+    setShow(true);
+  };
+
+  return (
+    <div ref={rowRef}
+      onMouseEnter={onEnter} onMouseLeave={() => setShow(false)}
+      style={{ display: "flex", justifyContent: "space-between", padding: "4px 0",
+        borderBottom: `1px solid ${C.border}`, cursor: tip ? "help" : "default",
+        background: show ? C.inputBg : "transparent", borderRadius: 3, paddingLeft: 4, paddingRight: 4,
+        transition: "background 0.15s" }}>
+      <span style={{ fontSize: 10, color: C.sub, display: "flex", alignItems: "center", gap: 4 }}>
+        {label}
+        {tip && <span style={{ fontSize: 8, opacity: 0.4 }}>ⓘ</span>}
+      </span>
+      <span style={{ fontSize: 11, fontWeight: 700, color: warn ? C.warn : C.text,
+        fontFamily: "'JetBrains Mono', monospace" }}>{value}</span>
+      {show && tip && tip.length > 0 && (
+        <div style={{ position: "fixed", left: Math.min(pos.x, window.innerWidth - 370), top: pos.y + 26,
+          zIndex: 9999, background: "#0c1629", border: `1px solid ${C.acPath}44`,
+          borderRadius: 8, padding: "10px 14px", minWidth: 280, maxWidth: 360,
+          boxShadow: "0 8px 32px rgba(0,0,0,0.6)", pointerEvents: "none" }}>
+          {tip.map((line, li) => {
+            // Line types: heading (starts with #), formula (starts with =), step (starts with →), divider (---)
+            if (line === "---") return <div key={li} style={{ borderBottom: `1px solid ${C.border}`, margin: "5px 0" }} />;
+            if (line.startsWith("# ")) return (
+              <div key={li} style={{ fontSize: 10, fontWeight: 700, color: C.acPath, letterSpacing: 0.8,
+                marginBottom: 4 }}>{line.slice(2)}</div>
+            );
+            if (line.startsWith("= ")) return (
+              <div key={li} style={{ fontSize: 12, fontWeight: 700, color: C.text, padding: "3px 0 1px",
+                fontFamily: "'JetBrains Mono', monospace", borderTop: `1px solid ${C.border}`, marginTop: 3 }}>
+                {"= "}{line.slice(2)}
+              </div>
+            );
+            if (line.startsWith("> ")) return (
+              <div key={li} style={{ fontSize: 9, color: C.muted, fontStyle: "italic", padding: "2px 0" }}>
+                {line.slice(2)}
+              </div>
+            );
+            // Default: formula step
+            const isArrow = line.startsWith("→ ");
+            return (
+              <div key={li} style={{ fontSize: 10, color: isArrow ? C.sub : "#8eaacc",
+                fontFamily: "'JetBrains Mono', monospace", padding: "1px 0", paddingLeft: isArrow ? 8 : 0 }}>
+                {line}
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+};
+
+const DataCard = ({ title, color, rows }) => (
+  <div style={{ background: C.cardBg, borderRadius: 8, padding: 12, borderLeft: `3px solid ${color}` }}>
+    <div style={{ fontSize: 11, fontWeight: 700, color, marginBottom: 8, letterSpacing: 0.5 }}>{title}</div>
+    {rows.map((r, i) => (
+      <TooltipRow key={i} label={r.label} value={r.value} warn={r.warn} tip={r.tip} />
+    ))}
+  </div>
+);
+
+// ═══════════════════════════════════════════════════
+// MAIN APP
+// ═══════════════════════════════════════════════════
+function UPSCalculator() {
+  const [mode, setMode] = useState("normal");
+  const [p, setP] = useState({
+    gridV: 115, phase: "single", loadW: 1000, outV: 115, outVA: 1200, reactiveOn: false,
+    wrpfc: false, dcOutput: false, dcOutV: 24, dcDcEff: 94,
+    turnsR: 1.0, xfmrEff: 94,
+    pfcEff: 94, invEff: 94, chargerEff: 94, chargerMaxW: 200, boostEff: 94,
+    inputCB: 50, outputCB: 40,
+    cellV: 12, minCellV: 10.5, cellAh: 10, maxCellI: 50,
+    seriesS: 10, parallelP: 1, peukert: 1.2,
+    chargerFuse: 6.3, boostFuse: 60,
+    graphStart: 333, graphEnd: 0,
+    ambTemp: 25, maxTemp: 40, vTol: 15, lowLine: false,
+    overloadPct: 0, overloadOn: false,
+  });
+  const [calcLoad, setCalcLoad] = useState("");
+  const [calcUnit, setCalcUnit] = useState("watts");
+  const [peukertMode, setPeukertMode] = useState("direct"); // "direct" or "calc"
+  const [ah20hr, setAh20hr] = useState(10);
+  const [ah5hr, setAh5hr] = useState(8);
+  const [activeTab, setActiveTab] = useState("calc"); // "calc" or "print"
+
+  const set = useCallback((key, val) => setP(prev => ({ ...prev, [key]: val })), []);
+
+  // Peukert calculator: n = ln(t1/t2) / ln(I2/I1)  where t1=20hr, t2=5hr, I=Ah/t
+  useEffect(() => {
+    if (peukertMode !== "calc" || ah20hr <= 0 || ah5hr <= 0) return;
+    const i20 = ah20hr / 20;
+    const i5 = ah5hr / 5;
+    if (i5 <= i20 || i20 <= 0) return; // invalid: 5hr rate must draw more current
+    const n = Math.log(4) / Math.log(i5 / i20); // ln(20/5) / ln(I5/I20)
+    if (isFinite(n) && n >= 1 && n <= 2) {
+      setP(prev => ({ ...prev, peukert: Math.round(n * 1000) / 1000 }));
+    }
+  }, [peukertMode, ah20hr, ah5hr]);
+
+  // Filter bypass out when WRPFC or DC output
+  const bypassAvail = !p.wrpfc && !p.dcOutput;
+  const modes = bypassAvail ? ALL_MODES : ALL_MODES.filter(m => m !== "bypass");
+  // Auto-switch away from bypass if it becomes unavailable
+  useEffect(() => { if (!bypassAvail && mode === "bypass") setMode("normal"); }, [bypassAvail, mode]);
+
+  const results = useMemo(() => calcSystem(p, mode), [p, mode]);
+
+  // All-mode results for print view
+  const allResults = useMemo(() => {
+    const am = bypassAvail ? ALL_MODES : ALL_MODES.filter(m => m !== "bypass");
+    return am.map(m => ({ mode: m, results: calcSystem(p, m) }));
+  }, [p, bypassAvail]);
+
+  // Runtime graph data
+  const graphData = useMemo(() => {
+    const maxLoad = p.graphEnd > 0 ? p.graphEnd : (p.overloadOn ? p.loadW * (1 + p.overloadPct / 100) : p.loadW);
+    const minLoad = p.graphStart || Math.max(50, Math.floor(maxLoad * 0.1));
+    const pts = [];
+    const step = Math.max(10, Math.floor((maxLoad - minLoad) / 40));
+    for (let ld = minLoad; ld <= maxLoad; ld += step) {
+      pts.push({ load: ld, runtime: calcRuntime(p, ld) });
+    }
+    if (pts.length === 0 || pts[pts.length - 1].load !== maxLoad) {
+      pts.push({ load: maxLoad, runtime: calcRuntime(p, maxLoad) });
+    }
+    return pts;
+  }, [p]);
+
+  // Calculator runtime
+  const calcResult = useMemo(() => {
+    if (!calcLoad) return null;
+    const val = parseFloat(calcLoad);
+    if (!val || val <= 0) return null;
+    const ld = calcUnit === "percent" ? p.loadW * val / 100 : val;
+    return { load: ld, runtime: calcRuntime(p, ld) };
+  }, [calcLoad, calcUnit, p]);
+
+  const r = results;
+  const outEff = p.dcOutput ? p.dcDcEff : p.invEff;
+  const outEffLabel = p.dcOutput ? "DC/DC" : "Inverter";
+  const outV = p.dcOutput ? p.dcOutV : p.outV;
+  const xfmrFactor = p.wrpfc ? 1 : (p.xfmrEff / 100);
+  const effChain = (xfmrFactor * (p.pfcEff / 100) * (outEff / 100) * 100).toFixed(1);
+  const pfcLabel = p.wrpfc ? "WRPFC" : "PFC";
+
+  // Pre-compute intermediate values for tooltip formulas
+  const loadW = p.overloadOn ? p.loadW * (1 + p.overloadPct / 100) : p.loadW;
+  const gridV = p.lowLine ? p.gridV * (1 - p.vTol / 100) : p.gridV;
+  const pfcInV = p.wrpfc ? gridV : gridV * p.turnsR;
+  const pf = p.phase === "three" ? Math.sqrt(3) : 1;
+  const pfLabelPh = p.phase === "three" ? "√3" : "1";
+  const battV = p.cellV * p.seriesS;
+  const outInP = loadW / (outEff / 100);
+  const boostInP = outInP / (p.boostEff / 100);
+  const chargingI = mode === "charging" ? Math.min(p.chargerMaxW / (r.batt.eodV || 1), p.chargerMaxW / battV) : 0;
+  const chargingPAtBatt = chargingI * battV;
+  const chargerInP = chargingPAtBatt / (p.chargerEff / 100);
+  const loadLabel = p.overloadOn ? `${p.loadW}W × (1 + ${p.overloadPct}%) = ${loadW.toFixed(0)}W` : `${p.loadW}W`;
+  const gridLabel = p.lowLine ? `${p.gridV}V × (1 − ${p.vTol}%) = ${gridV.toFixed(1)}V` : `${p.gridV}V`;
+
+  // ─── Tooltip builders ───
+  const tipPfcV = () => {
+    if (p.wrpfc) {
+      const t = [`# ${pfcLabel} Input Voltage`, "---", "V_wrpfc = Grid V (direct, no transformer)"];
+      if (p.lowLine) t.push(`> Low Line: ${p.gridV}V × (1 − ${p.vTol}%) = ${gridV.toFixed(1)}V`);
+      t.push(`= ${gridV.toFixed(1)} V`);
+      return t;
+    }
+    const t = ["# PFC Input Voltage", "---", "V_pfc = Grid V × Turns Ratio"];
+    if (p.lowLine) t.push(`> Low Line: ${p.gridV}V × (1 − ${p.vTol}%) = ${gridV.toFixed(1)}V`);
+    t.push(`→ ${gridV.toFixed(1)}V × ${p.turnsR}`, `= ${pfcInV.toFixed(1)} V`);
+    return t;
+  };
+  const tipPfcI = () => {
+    const t = [`# ${pfcLabel} Input Current`, "---", `I = P ÷ (${pfLabelPh} × V)`];
+    t.push(`→ ${(r.pfc.power || 0).toFixed(1)}W ÷ (${pfLabelPh} × ${pfcInV.toFixed(1)}V)`);
+    t.push(`→ ${(r.pfc.power || 0).toFixed(1)}W ÷ ${(pf * pfcInV).toFixed(1)}`);
+    t.push(`= ${(r.pfc.current || 0).toFixed(2)} A`);
+    if (p.wrpfc) t.push(`> WRPFC: input current = grid current`);
+    return t;
+  };
+  const tipPfcP = () => {
+    if (mode === "battery" || mode === "bypass") return [`# ${pfcLabel} Input Power`, "---", "> Not active in this mode", "= 0 W"];
+    const t = [`# ${pfcLabel} Input Power`, "---"];
+    t.push(`P = Load W ÷ (${outEffLabel} Eff × ${pfcLabel} Eff)`);
+    t.push(`> Load: ${loadLabel}`);
+    t.push(`→ ${loadW.toFixed(0)}W ÷ (${outEff}% × ${p.pfcEff}%)`);
+    t.push(`→ ${loadW.toFixed(0)}W ÷ ${((outEff / 100) * (p.pfcEff / 100)).toFixed(4)}`);
+    const basePfc = loadW / (outEff / 100) / (p.pfcEff / 100);
+    t.push(`→ ${basePfc.toFixed(1)}W (for ${outEffLabel.toLowerCase()} load)`);
+    if (mode === "charging") {
+      t.push("---", `Plus charger power through ${pfcLabel}:`);
+      t.push(`→ ${chargerInP.toFixed(1)}W ÷ ${p.pfcEff}% = + ${(chargerInP / (p.pfcEff / 100)).toFixed(1)}W`);
+    }
+    t.push(`= ${(r.pfc.power || 0).toFixed(1)} W`);
+    return t;
+  };
+  const tipInputI = () => {
+    const t = ["# Input Current (Grid Side)", "---"];
+    if (p.wrpfc) {
+      t.push(`> WRPFC: Input I = PFC I (no transformer)`);
+      t.push(`I_in = P ÷ (${pfLabelPh} × Grid V)`);
+      t.push(`→ ${(r.pfc.power || 0).toFixed(1)}W ÷ (${pfLabelPh} × ${gridV.toFixed(1)}V)`);
+      t.push(`= ${(r.inputI || 0).toFixed(2)} A`);
+    } else {
+      t.push(`I_in = P_pfc ÷ (Xfmr Eff × ${pfLabelPh} × Grid V)`);
+      t.push(`> Grid: ${gridLabel}`);
+      t.push(`→ ${(r.pfc.power || 0).toFixed(1)}W ÷ (${p.xfmrEff}% × ${pfLabelPh} × ${gridV.toFixed(1)}V)`);
+      t.push(`→ ${(r.pfc.power || 0).toFixed(1)}W ÷ ${((p.xfmrEff / 100) * pf * gridV).toFixed(1)}`);
+      t.push(`= ${(r.inputI || 0).toFixed(2)} A`);
+    }
+    return t;
+  };
+  const tipDcV = () => ["# DC Bus Voltage", "---", "Fixed regulated DC bus", "= 400 V"];
+  const tipDcI = () => {
+    const t = ["# DC Bus Current", "---", "I_dc = P_dc ÷ V_dc"];
+    t.push(`→ ${(r.dc.power || 0).toFixed(1)}W ÷ 400V`);
+    t.push(`= ${(r.dc.current || 0).toFixed(2)} A`);
+    return t;
+  };
+  const tipDcP = () => {
+    if (mode === "battery") {
+      const t = ["# DC Bus Power (Battery Mode)", "---", `P_dc = Load W ÷ ${outEffLabel} Eff`];
+      t.push(`> Power the ${outEffLabel.toLowerCase()} draws from DC bus`);
+      t.push(`→ ${loadW.toFixed(0)}W ÷ ${outEff}%`);
+      t.push(`= ${outInP.toFixed(1)} W`);
+      return t;
+    }
+    const t = [`# DC Bus Power`, "---", `P_dc = P_${pfcLabel.toLowerCase()} × ${pfcLabel} Eff`];
+    t.push(`→ ${(r.pfc.power || 0).toFixed(1)}W × ${p.pfcEff}%`);
+    t.push(`= ${(r.dc.power || 0).toFixed(1)} W`);
+    return t;
+  };
+  const tipBattV = () => {
+    const t = ["# Battery Pack Voltage", "---", "V_batt = Cell V × Series Count"];
+    t.push(`→ ${p.cellV}V × ${p.seriesS}S`, `= ${battV.toFixed(1)} V`);
+    return t;
+  };
+  const tipBattI = () => {
+    if (mode === "charging") {
+      const t = ["# Battery Charging Current", "---", "I_chg = min(P_chg ÷ V_eod, P_chg ÷ V_batt)"];
+      t.push(`> Charger Max Power: ${p.chargerMaxW}W`);
+      t.push(`→ ${p.chargerMaxW}W ÷ ${(r.batt.eodV || 0).toFixed(1)}V = ${(p.chargerMaxW / (r.batt.eodV || 1)).toFixed(2)}A`);
+      t.push(`→ ${p.chargerMaxW}W ÷ ${battV.toFixed(1)}V = ${(p.chargerMaxW / battV).toFixed(2)}A`);
+      t.push(`= ${chargingI.toFixed(2)} A`);
+      return t;
+    }
+    if (mode === "battery") {
+      const t = ["# Battery Discharge Current", "---", `I_batt = P_boost_in ÷ V_batt`];
+      t.push(`> P_boost_in = Load ÷ (${outEffLabel} Eff × Boost Eff)`);
+      t.push(`→ ${loadW.toFixed(0)}W ÷ (${outEff}% × ${p.boostEff}%)`);
+      t.push(`→ ${loadW.toFixed(0)}W ÷ ${((outEff / 100) * (p.boostEff / 100)).toFixed(4)} = ${boostInP.toFixed(1)}W`);
+      t.push(`→ ${boostInP.toFixed(1)}W ÷ ${battV.toFixed(1)}V`);
+      t.push(`= ${(r.batt.current || 0).toFixed(2)} A`);
+      return t;
+    }
+    return ["# Battery Current", "---", "> Idle in this mode", "= 0 A"];
+  };
+  const tipBattP = () => {
+    if (mode === "charging") {
+      const t = ["# Battery Charging Power", "---", "P_batt = I_chg × V_batt"];
+      t.push(`→ ${chargingI.toFixed(2)}A × ${battV.toFixed(1)}V`, `= ${chargingPAtBatt.toFixed(1)} W`);
+      return t;
+    }
+    if (mode === "battery") {
+      const t = ["# Battery Discharge Power", "---", `P_batt = Load ÷ (${outEffLabel} Eff × Boost Eff)`];
+      t.push(`→ ${loadW.toFixed(0)}W ÷ (${outEff}% × ${p.boostEff}%)`);
+      t.push(`= ${boostInP.toFixed(1)} W`);
+      return t;
+    }
+    return ["# Battery Power", "---", "> Idle in this mode", "= 0 W"];
+  };
+  const tipBattCap = () => ["# Battery Capacity", "---", "Ah = Cell Ah × Parallel Count",
+    `→ ${p.cellAh}Ah × ${p.parallelP}P`, `= ${(p.cellAh * p.parallelP).toFixed(0)} Ah`];
+  const tipBattMaxI = () => {
+    const packMax = p.maxCellI * p.parallelP;
+    const t = ["# Max Pack Discharge Current", "---", "I_max = Max Cell I × Parallel Strings"];
+    t.push(`→ ${p.maxCellI}A × ${p.parallelP}P`);
+    t.push(`= ${packMax.toFixed(1)} A`);
+    t.push(`> Per-string limit: ${p.maxCellI}A`);
+    if (r.batt.dischExceeded) t.push(`> ⚠ Current exceeds pack limit`);
+    return t;
+  };
+  const tipBattEodI = () => {
+    const eodV = p.minCellV * p.seriesS;
+    if (mode !== "battery") return ["# EOD Current", "---", "> Only calculated in battery mode", `> EOD Voltage: ${eodV.toFixed(1)}V`, "= — A"];
+    const t = ["# Current at End of Discharge", "---"];
+    t.push(`V_eod = Min Cell V × Series = ${p.minCellV}V × ${p.seriesS}S = ${eodV.toFixed(1)}V`);
+    t.push(`I_eod = P_boost_in ÷ V_eod`);
+    t.push(`> P_boost_in = Load ÷ (${outEffLabel} Eff × Boost Eff)`);
+    t.push(`→ ${loadW.toFixed(0)}W ÷ (${outEff}% × ${p.boostEff}%)`);
+    t.push(`→ ${boostInP.toFixed(1)}W ÷ ${eodV.toFixed(1)}V`);
+    t.push(`= ${(r.batt.eodI || 0).toFixed(2)} A`);
+    const packMax = p.maxCellI * p.parallelP;
+    if ((r.batt.eodI || 0) > packMax) t.push(`> ⚠ Exceeds pack max ${packMax}A`);
+    return t;
+  };
+  // Cell-level tooltips
+  const tipCellV = () => ["# Cell Nominal Voltage", "---", `Datasheet nominal: ${p.cellV} V`,
+    `> Pack = ${p.cellV}V × ${p.seriesS}S = ${battV.toFixed(1)}V`];
+  const tipCellMinV = () => ["# Cell Min Voltage (EOD)", "---", `End-of-discharge per cell: ${p.minCellV} V`,
+    `> Pack EOD = ${p.minCellV}V × ${p.seriesS}S = ${(p.minCellV * p.seriesS).toFixed(1)}V`];
+  const tipCellAh = () => ["# Cell Capacity", "---", `Rated at C/20 rate: ${p.cellAh} Ah`,
+    `> Pack = ${p.cellAh}Ah × ${p.parallelP}P = ${(p.cellAh * p.parallelP).toFixed(0)}Ah`];
+  const tipCellMaxI = () => ["# Cell Max Discharge Current", "---", `Per-cell limit: ${p.maxCellI} A`,
+    `> Pack = ${p.maxCellI}A × ${p.parallelP}P = ${(p.maxCellI * p.parallelP).toFixed(0)}A`];
+  const tipCellI = () => {
+    const stringI = p.parallelP > 0 ? (r.batt.current || 0) / p.parallelP : 0;
+    const t = ["# Per-String Current", "---", "I_string = Pack I ÷ Parallel Strings"];
+    t.push(`→ ${(r.batt.current || 0).toFixed(2)}A ÷ ${p.parallelP}P`);
+    t.push(`= ${stringI.toFixed(2)} A`);
+    if (stringI > p.maxCellI) t.push(`> ⚠ Exceeds cell max ${p.maxCellI}A`);
+    return t;
+  };
+  const tipInvV = () => {
+    if (p.dcOutput) return ["# DC Output Voltage", "---", `DC/DC converter: 400V → ${p.dcOutV}V`, `= ${p.dcOutV} V`];
+    return ["# Output Voltage", "---", "User-defined AC output voltage", `= ${p.outV} V`];
+  };
+  const tipInvI = () => {
+    const t = [p.dcOutput ? "# DC Output Current" : "# Output Current", "---"];
+    if (p.dcOutput) {
+      t.push("I_out = Load W ÷ V_out", `> DC output: no reactive component`,
+        `→ ${loadW.toFixed(0)}W ÷ ${outV}V`, `= ${(loadW / outV).toFixed(2)} A`);
+    } else if (p.reactiveOn) {
+      t.push("I_out = VA Rating ÷ V_out", `> Reactive load enabled`,
+        `→ ${p.outVA}VA ÷ ${p.outV}V`, `= ${(p.outVA / p.outV).toFixed(2)} A`);
+    } else {
+      t.push("I_out = Load W ÷ V_out", `> Resistive load (PF = 1.0)`,
+        `→ ${loadW.toFixed(0)}W ÷ ${p.outV}V`, `= ${(loadW / p.outV).toFixed(2)} A`);
+    }
+    return t;
+  };
+  const tipInvP = () => {
+    const t = [p.dcOutput ? "# DC Output Power" : "# Real Output Power", "---"];
+    if (p.overloadOn) t.push(`> Overload: ${p.loadW}W × (1 + ${p.overloadPct}%)`);
+    t.push(`= ${loadW.toFixed(0)} W`);
+    return t;
+  };
+  const tipInvVA = () => {
+    if (p.dcOutput) return ["# Apparent Power", "---", `DC output: VA = W`, `= ${loadW.toFixed(0)} VA`];
+    if (p.reactiveOn) return ["# Apparent Power", "---", `VA = Output VA Rating`, `= ${p.outVA} VA`,
+      `> PF = ${loadW.toFixed(0)}W ÷ ${p.outVA}VA = ${(loadW / p.outVA).toFixed(3)}`];
+    return ["# Apparent Power", "---", `VA = W (resistive, PF = 1.0)`, `= ${loadW.toFixed(0)} VA`];
+  };
+  const tipInputCB = () => {
+    const t = ["# Input Circuit Breaker", "---", `Rating: ${p.inputCB}A`];
+    t.push(`Actual: ${(r.inputI || 0).toFixed(2)}A`);
+    if (r.inputI > p.inputCB) t.push(`> ⚠ TRIPPED: ${(r.inputI || 0).toFixed(2)}A > ${p.inputCB}A`);
+    else t.push(`> OK: ${((r.inputI / p.inputCB) * 100).toFixed(0)}% of rating`);
+    return t;
+  };
+  const tipOutputCB = () => {
+    const t = ["# Output Circuit Breaker", "---", `Rating: ${p.outputCB}A`];
+    t.push(`Actual: ${(r.inv.current || 0).toFixed(2)}A`);
+    if (r.inv.current > p.outputCB) t.push(`> ⚠ TRIPPED`);
+    else t.push(`> OK: ${((r.inv.current / p.outputCB) * 100).toFixed(0)}% of rating`);
+    return t;
+  };
+  const tipBoostFuse = () => {
+    const t = ["# Boost Fuse F1", "---", `Rating: ${p.boostFuse}A`, "I_fuse = DC Bus I (battery mode)"];
+    t.push(`→ P_dc ÷ V_dc = ${(r.dc.power || 0).toFixed(1)}W ÷ 400V`);
+    t.push(`= ${(r.boostFuseI || 0).toFixed(2)} A`);
+    if (r.boostFuseBlown) t.push(`> ⚠ BLOWN: exceeds ${p.boostFuse}A`);
+    else t.push(`> ${mode === "battery" ? `${(((r.boostFuseI || 0) / p.boostFuse) * 100).toFixed(0)}% of rating` : "Inactive"}`);
+    return t;
+  };
+  const tipChargerFuse = () => {
+    const t = ["# Charger Fuse F2", "---", `Rating: ${p.chargerFuse}A`, "I_fuse = Charger DC Bus Input ÷ V_dc"];
+    if (mode === "charging") {
+      t.push(`→ (${chargingPAtBatt.toFixed(1)}W ÷ ${p.chargerEff}%) ÷ 400V`);
+      t.push(`→ ${chargerInP.toFixed(1)}W ÷ 400V`);
+    }
+    t.push(`= ${(r.chargerFuseI || 0).toFixed(2)} A`);
+    if (r.chargerFuseBlown) t.push(`> ⚠ BLOWN: exceeds ${p.chargerFuse}A`);
+    else t.push(`> ${mode === "charging" ? `${(((r.chargerFuseI || 0) / p.chargerFuse) * 100).toFixed(0)}% of rating` : "Inactive"}`);
+    return t;
+  };
+  const tipEffChain = () => {
+    if (p.wrpfc) return ["# System Efficiency Chain", "---",
+      `η_total = ${pfcLabel} × ${outEffLabel}`,
+      `→ ${p.pfcEff}% × ${outEff}%`,
+      `→ ${(p.pfcEff / 100).toFixed(3)} × ${(outEff / 100).toFixed(3)}`,
+      `= ${effChain}%`, `> No transformer loss (WRPFC)`];
+    return ["# System Efficiency Chain", "---",
+      `η_total = Xfmr × ${pfcLabel} × ${outEffLabel}`,
+      `→ ${p.xfmrEff}% × ${p.pfcEff}% × ${outEff}%`,
+      `→ ${(p.xfmrEff / 100).toFixed(3)} × ${(p.pfcEff / 100).toFixed(3)} × ${(outEff / 100).toFixed(3)}`,
+      `= ${effChain}%`, `> ${(100 - parseFloat(effChain)).toFixed(1)}% lost as heat`];
+  };
+  const tipHeat = () => {
+    const t = ["# Total Heat Dissipated", "---", "Sum of losses at each stage:"];
+    if (r.pfc.power > 0 && !p.wrpfc) {
+      const xH = (r.pfc.power / (p.xfmrEff / 100)) - r.pfc.power;
+      t.push(`Transformer: ${xH.toFixed(1)}W (${100 - p.xfmrEff}% of ${(r.pfc.power / (p.xfmrEff / 100)).toFixed(0)}W)`);
+    }
+    if (r.pfc.power > 0 && r.dc.power >= 0) {
+      const pH = r.pfc.power - (r.dc.power || 0);
+      t.push(`${pfcLabel}: ${pH.toFixed(1)}W (${100 - p.pfcEff}% of ${(r.pfc.power).toFixed(0)}W)`);
+    }
+    if (r.inv.power > 0) {
+      const iH = (r.inv.power / (outEff / 100)) - r.inv.power;
+      t.push(`${outEffLabel}: ${iH.toFixed(1)}W (${100 - outEff}% of ${(r.inv.power / (outEff / 100)).toFixed(0)}W)`);
+    }
+    if (r.batt.chargingP > 0) {
+      const cH = (r.batt.chargingP / (p.chargerEff / 100)) - r.batt.chargingP;
+      t.push(`Charger: ${cH.toFixed(1)}W (${100 - p.chargerEff}% of ${(r.batt.chargingP / (p.chargerEff / 100)).toFixed(0)}W)`);
+    }
+    if (mode === "battery" && r.batt.power > 0) {
+      const bH = r.batt.power * (1 - p.boostEff / 100);
+      t.push(`Boost: ${bH.toFixed(1)}W (${100 - p.boostEff}% of ${r.batt.power.toFixed(0)}W)`);
+    }
+    t.push(`= ${(r.thermal.heat || 0).toFixed(1)} W`);
+    return t;
+  };
+  const tipCfm = () => ["# Required Airflow (CFM)", "---",
+    "CFM = (3.16 × Heat) ÷ ΔT",
+    `→ (3.16 × ${(r.thermal.heat || 0).toFixed(1)}W) ÷ ${r.thermal.dT}°C`,
+    `→ ${(3.16 * (r.thermal.heat || 0)).toFixed(1)} ÷ ${r.thermal.dT}`,
+    `= ${(r.thermal.cfm || 0).toFixed(1)} CFM`,
+    `> ΔT = ${p.maxTemp}°C − ${p.ambTemp}°C = ${r.thermal.dT}°C`];
+  const tipDT = () => ["# Temperature Budget", "---", "ΔT = Max Internal Temp − Ambient Temp",
+    `→ ${p.maxTemp}°C − ${p.ambTemp}°C`, `= ${r.thermal.dT} °C`];
+
+  return (
+    <div style={{ background: C.bg, minHeight: "100vh", fontFamily: "'JetBrains Mono', 'Fira Code', monospace", color: C.text }}>
+      {/* Header */}
+      <div className="no-print" style={{ background: `linear-gradient(135deg, ${C.panelBg}, ${C.cardBg})`, padding: "12px 24px",
+        borderBottom: `1px solid ${C.border}`, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
+          <img src={LOGO_URI} alt="Intellipower"
+            style={{ height: 32, objectFit: "contain", filter: "brightness(1.1)" }} />
+          <div>
+            <div style={{ fontSize: 16, fontWeight: 800, letterSpacing: 2 }}>UPS SYSTEM CALCULATOR</div>
+            <div style={{ fontSize: 10, color: C.sub, marginTop: 1 }}>
+              {p.wrpfc ? "WRPFC" : "Xfmr + PFC"} · {p.dcOutput ? "DC/DC Output" : "Inverter"}{activeTab === "calc" ? ` · ${MODE_LABELS[mode]}` : " · All Modes"}
+            </div>
+          </div>
+        </div>
+        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+          {/* Tabs */}
+          <div style={{ display: "flex", gap: 2, background: C.bg, borderRadius: 6, padding: 2 }}>
+            {[{ k: "calc", l: "Calculator" }, { k: "print", l: "Print View" }].map(t => (
+              <button key={t.k} onClick={() => setActiveTab(t.k)}
+                style={{ padding: "5px 12px", borderRadius: 4, border: "none",
+                  background: activeTab === t.k ? C.acPath + "33" : "transparent",
+                  color: activeTab === t.k ? C.acPath : C.sub,
+                  fontSize: 10, fontWeight: 700, cursor: "pointer", letterSpacing: 0.5,
+                  fontFamily: "'JetBrains Mono', monospace" }}>
+                {t.l}
+              </button>
+            ))}
+          </div>
+          {/* Mode buttons - only in calculator */}
+          {activeTab === "calc" && (
+            <div style={{ display: "flex", gap: 6 }}>
+              {modes.map(m => (
+                <button key={m} onClick={() => setMode(m)}
+                  style={{ padding: "6px 14px", borderRadius: 5, border: `1px solid ${mode === m ? MODE_COLORS[m] : C.border}`,
+                    background: mode === m ? MODE_COLORS[m] + "22" : "transparent", color: mode === m ? MODE_COLORS[m] : C.sub,
+                    fontSize: 11, fontWeight: 700, cursor: "pointer", letterSpacing: 0.5,
+                    fontFamily: "'JetBrains Mono', monospace", transition: "all 0.15s" }}>
+                  {MODE_LABELS[m]}
+                </button>
+              ))}
+            </div>
+          )}
+          {activeTab === "print" && (
+            <button onClick={() => window.print()}
+              style={{ padding: "6px 16px", borderRadius: 5, border: `1px solid ${C.acPath}`,
+                background: C.acPath + "22", color: C.acPath,
+                fontSize: 11, fontWeight: 700, cursor: "pointer", letterSpacing: 0.5,
+                fontFamily: "'JetBrains Mono', monospace" }}>
+              🖨 Print
+            </button>
+          )}
+        </div>
+      </div>
+
+      {/* ════ CALCULATOR TAB ════ */}
+      {activeTab === "calc" && <>
+
+      {/* Warnings */}
+      {r.warnings.length > 0 && (
+        <div style={{ background: C.warn + "18", borderBottom: `1px solid ${C.warn}44`, padding: "8px 24px" }}>
+          {r.warnings.map((w, i) => (
+            <div key={i} style={{ fontSize: 11, color: C.warn, padding: "2px 0" }}>⚠ {w}</div>
+          ))}
+        </div>
+      )}
+
+      <div style={{ display: "grid", gridTemplateColumns: "280px 1fr", minHeight: "calc(100vh - 60px)" }}>
+        {/* ── CONTROL PANEL ── */}
+        <div style={{ background: C.panelBg, padding: 16, overflowY: "auto", borderRight: `1px solid ${C.border}`,
+          maxHeight: "calc(100vh - 60px)" }}>
+          <Section title="Topology" color={C.dcBus}>
+            <Chk label="WRPFC (No Transformer)" checked={p.wrpfc} onChange={v => set("wrpfc", v)}
+              note="Wide-range PFC direct from grid" />
+            <Chk label="DC/DC Output (No Inverter)" checked={p.dcOutput} onChange={v => set("dcOutput", v)}
+              note="400V DC Bus → Low voltage DC" />
+            {p.dcOutput && (
+              <F label="DC Output Voltage" value={p.dcOutV} onChange={v => set("dcOutV", v)} step={0.1} unit="V" />
+            )}
+          </Section>
+
+          <Section title="Power & Load" color={C.acPath}>
+            <Row>
+              <F label="Grid Voltage" value={p.gridV} onChange={v => set("gridV", v)} unit="V" />
+              <Sel label="Phase" value={p.phase} onChange={v => set("phase", v)}
+                options={[{ v: "single", l: "1Φ" }, { v: "three", l: "3Φ" }]} />
+            </Row>
+            <F label="Target Output Power" value={p.loadW} onChange={v => set("loadW", v)} step={10} unit="W" />
+            {!p.dcOutput && (
+              <>
+                <Row>
+                  <F label="Output Voltage" value={p.outV} onChange={v => set("outV", v)} unit="V" />
+                  <F label="Output VA" value={p.outVA} onChange={v => set("outVA", v)} unit="VA" />
+                </Row>
+                <Chk label="Enable Reactive Load" checked={p.reactiveOn} onChange={v => set("reactiveOn", v)}
+                  note="OFF: Resistive PF=1 | ON: Max VA" />
+              </>
+            )}
+          </Section>
+
+          {!p.wrpfc && (
+            <Section title="Transformer" color={C.acPath}>
+              <Row>
+                <F label="Turns Ratio" value={p.turnsR} onChange={v => set("turnsR", v)} step={0.1} />
+                <F label="Efficiency" value={p.xfmrEff} onChange={v => set("xfmrEff", v)} step={0.1} unit="%" />
+              </Row>
+            </Section>
+          )}
+
+          <Section title="Efficiencies" color={C.outputPath}>
+            <Row>
+              <F label={p.wrpfc ? "WRPFC" : "PFC"} value={p.pfcEff} onChange={v => set("pfcEff", v)} step={0.1} unit="%" />
+              {p.dcOutput
+                ? <F label="DC/DC Conv" value={p.dcDcEff} onChange={v => set("dcDcEff", v)} step={0.1} unit="%" />
+                : <F label="Inverter" value={p.invEff} onChange={v => set("invEff", v)} step={0.1} unit="%" />
+              }
+            </Row>
+            <Row>
+              <F label="Charger" value={p.chargerEff} onChange={v => set("chargerEff", v)} step={0.1} unit="%" />
+              <F label="Charger Max" value={p.chargerMaxW} onChange={v => set("chargerMaxW", v)} step={10} unit="W" />
+            </Row>
+            <F label="Boost Converter" value={p.boostEff} onChange={v => set("boostEff", v)} step={0.1} unit="%" />
+          </Section>
+
+          <Section title="Battery — Cell" color={C.battPath}>
+            <Row>
+              <F label="Nominal Voltage" value={p.cellV} onChange={v => set("cellV", v)} step={0.1} unit="V" />
+              <F label="Min Voltage (EOD)" value={p.minCellV} onChange={v => set("minCellV", v)} step={0.1} unit="V" />
+            </Row>
+            <Row>
+              <F label="Capacity" value={p.cellAh} onChange={v => set("cellAh", v)} unit="Ah" />
+              <F label="Max Discharge I" value={p.maxCellI} onChange={v => set("maxCellI", v)} unit="A" />
+            </Row>
+          </Section>
+
+          <Section title="Battery — Pack" color={C.battPath}>
+            <Row>
+              <F label="Series (S)" value={p.seriesS} onChange={v => set("seriesS", v)} min={1} />
+              <F label="Parallel (P)" value={p.parallelP} onChange={v => set("parallelP", v)} min={1} />
+            </Row>
+            <div style={{ fontSize: 9, color: C.sub, padding: "2px 0 6px", lineHeight: 1.4 }}>
+              Pack: {(p.cellV * p.seriesS).toFixed(1)}V nom · {(p.minCellV * p.seriesS).toFixed(1)}V EOD · {(p.cellAh * p.parallelP).toFixed(0)}Ah · {(p.maxCellI * p.parallelP).toFixed(0)}A max
+            </div>
+          </Section>
+
+          <Section title="Peukert Effect" color={C.battPath}>
+            <div style={{ display: "flex", gap: 4, marginBottom: 6 }}>
+              {["direct", "calc"].map(m => (
+                <button key={m} onClick={() => setPeukertMode(m)}
+                  style={{ flex: 1, padding: "4px 0", borderRadius: 4, fontSize: 9, fontWeight: 700,
+                    border: `1px solid ${peukertMode === m ? C.battPath : C.border}`,
+                    background: peukertMode === m ? C.battPath + "22" : "transparent",
+                    color: peukertMode === m ? C.battPath : C.sub,
+                    cursor: "pointer", fontFamily: "'JetBrains Mono', monospace" }}>
+                  {m === "direct" ? "Enter Directly" : "Calculate from Ah"}
+                </button>
+              ))}
+            </div>
+            {peukertMode === "direct" ? (
+              <F label="Peukert Coefficient" value={p.peukert} onChange={v => set("peukert", v)} step={0.01} min={1} />
+            ) : (
+              <>
+                <Row>
+                  <F label="20hr Rate" value={ah20hr} onChange={setAh20hr} step={0.1} unit="Ah" />
+                  <F label="5hr Rate" value={ah5hr} onChange={setAh5hr} step={0.1} unit="Ah" />
+                </Row>
+                <div style={{ fontSize: 10, color: C.battPath, fontWeight: 700, padding: "4px 0 2px" }}>
+                  Calculated: n = {p.peukert.toFixed(3)}
+                </div>
+              </>
+            )}
+            <div style={{ fontSize: 8, color: C.muted, lineHeight: 1.4, marginTop: 4, padding: "4px 6px",
+              background: C.bg, borderRadius: 4, border: `1px solid ${C.border}` }}>
+              <div style={{ fontWeight: 700, color: C.sub, marginBottom: 2 }}>ⓘ Peukert Exponent Guide</div>
+              <div>Models capacity loss at high discharge rates.</div>
+              <div>n = 1.0 → ideal (no loss). Higher n → more loss.</div>
+              <div style={{ marginTop: 3 }}>
+                <span style={{ color: C.battPath }}>Lithium:</span> 1.00 – 1.05 (nearly ideal)
+              </div>
+              <div><span style={{ color: C.dcBus }}>AGM:</span> 1.10 – 1.15</div>
+              <div><span style={{ color: C.warn }}>Flooded Lead-Acid:</span> 1.15 – 1.30</div>
+              <div style={{ marginTop: 3, fontStyle: "italic" }}>
+                Peukert's law doesn't track well for lithium cells — their capacity is nearly constant across discharge rates.
+                Use n ≈ 1.02 for Li-ion / LiFePO4 and rely on cell datasheets for accuracy.
+              </div>
+              <div style={{ marginTop: 3 }}>
+                <span style={{ fontWeight: 700, color: C.sub }}>Calc mode:</span> enter rated Ah at 20hr and 5hr discharge rates from the cell datasheet.
+                n = ln(4) / ln(I₅ / I₂₀)
+              </div>
+            </div>
+          </Section>
+
+          <Section title="Protection" color={C.fuse}>
+            <Row>
+              <F label="Input CB" value={p.inputCB} onChange={v => set("inputCB", v)} unit="A" />
+              <F label="Output CB" value={p.outputCB} onChange={v => set("outputCB", v)} unit="A" />
+            </Row>
+            <Row>
+              <F label="Boost Fuse (F1)" value={p.boostFuse} onChange={v => set("boostFuse", v)} step={0.1} unit="A" />
+              <F label="Charger Fuse (F2)" value={p.chargerFuse} onChange={v => set("chargerFuse", v)} step={0.1} unit="A" />
+            </Row>
+          </Section>
+
+          <Section title="Conditions" color={C.warn}>
+            <F label="V Tolerance" value={p.vTol} onChange={v => set("vTol", v)} step={0.1} unit="%" />
+            <Chk label="Low Line Mode" checked={p.lowLine} onChange={v => set("lowLine", v)} />
+            <Row>
+              <F label="Overload" value={p.overloadPct} onChange={v => set("overloadPct", v)} unit="%" />
+              <div style={{ paddingTop: 18 }}>
+                <Chk label="Enable" checked={p.overloadOn} onChange={v => set("overloadOn", v)} />
+              </div>
+            </Row>
+          </Section>
+
+          <Section title="Thermal" color="#ef4444">
+            <Row>
+              <F label="Ambient" value={p.ambTemp} onChange={v => set("ambTemp", v)} unit="°C" />
+              <F label="Max Internal" value={p.maxTemp} onChange={v => set("maxTemp", v)} unit="°C" />
+            </Row>
+          </Section>
+
+          <Section title="Graph Range" color={C.dcBus}>
+            <Row>
+              <F label="Start Load" value={p.graphStart} onChange={v => set("graphStart", v)} step={10} unit="W" />
+              <F label="End Load" value={p.graphEnd} onChange={v => set("graphEnd", v)} step={10} unit="W"
+                small="0 = use system load" />
+            </Row>
+          </Section>
+        </div>
+
+        {/* ── MAIN CONTENT ── */}
+        <div style={{ overflowY: "auto", maxHeight: "calc(100vh - 60px)" }}>
+          {/* Block Diagram */}
+          <div style={{ padding: 16 }}>
+            <div style={{ fontSize: 11, fontWeight: 700, color: C.sub, letterSpacing: 1, marginBottom: 8 }}>
+              SYSTEM TOPOLOGY · {MODE_LABELS[mode].toUpperCase()} MODE{p.wrpfc ? " · WRPFC" : ""}{p.dcOutput ? " · DC OUTPUT" : ""}
+            </div>
+            <Diagram mode={mode} results={r} params={p} />
+          </div>
+
+          {/* Dashboard */}
+          <div style={{ padding: "0 16px 16px", display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 10 }}>
+            <DataCard title={p.wrpfc ? "WRPFC Input" : "PFC Input"} color={C.acPath} rows={[
+              { label: "Voltage", value: `${(r.pfc.voltage || 0).toFixed(1)} V`, tip: tipPfcV() },
+              { label: "Current", value: `${(r.pfc.current || 0).toFixed(2)} A`, tip: tipPfcI() },
+              { label: "Power", value: `${(r.pfc.power || 0).toFixed(1)} W`, tip: tipPfcP() },
+              { label: "Input Current", value: `${(r.inputI || 0).toFixed(2)} A`, warn: r.warnings.some(w => w.includes("Input CB")), tip: tipInputI() },
+            ]} />
+            <DataCard title="DC Bus" color={C.dcBus} rows={[
+              { label: "Voltage", value: `${(r.dc.voltage || 0).toFixed(0)} V`, tip: tipDcV() },
+              { label: "Current", value: `${(r.dc.current || 0).toFixed(2)} A`, tip: tipDcI() },
+              { label: "Power", value: `${(r.dc.power || 0).toFixed(1)} W`, tip: tipDcP() },
+            ]} />
+            <DataCard title="Battery — Cell" color={C.battPath} rows={[
+              { label: "Nominal V", value: `${p.cellV} V`, tip: tipCellV() },
+              { label: "EOD V (Min)", value: `${p.minCellV} V`, tip: tipCellMinV() },
+              { label: "Capacity", value: `${p.cellAh} Ah`, tip: tipCellAh() },
+              { label: "Max Discharge I", value: `${p.maxCellI} A`, tip: tipCellMaxI() },
+              { label: "String Current", value: `${(p.parallelP > 0 ? (r.batt.current || 0) / p.parallelP : 0).toFixed(2)} A`, warn: p.parallelP > 0 && (r.batt.current || 0) / p.parallelP > p.maxCellI, tip: tipCellI() },
+            ]} />
+            <DataCard title={`Battery — Pack (${p.seriesS}S${p.parallelP}P)`} color={C.battPath} rows={[
+              { label: "Voltage", value: `${(r.batt.voltage || 0).toFixed(1)} V`, tip: tipBattV() },
+              { label: "EOD Voltage", value: `${(r.batt.eodV || 0).toFixed(1)} V`, tip: ["# Pack EOD Voltage", "---", `V_eod = Min Cell V × Series`, `→ ${p.minCellV}V × ${p.seriesS}S`, `= ${(p.minCellV * p.seriesS).toFixed(1)} V`] },
+              { label: "Current", value: `${(r.batt.current || 0).toFixed(2)} A`, warn: r.batt.dischExceeded, tip: tipBattI() },
+              { label: "Power", value: `${(r.batt.power || 0).toFixed(1)} W`, tip: tipBattP() },
+              { label: "Total Capacity", value: `${(r.batt.capacity || 0).toFixed(0)} Ah`, tip: tipBattCap() },
+              { label: `Max Pack I`, value: `${(p.maxCellI * p.parallelP).toFixed(0)} A`, warn: r.batt.dischExceeded, tip: tipBattMaxI() },
+              { label: "EOD Current", value: mode === "battery" ? `${(r.batt.eodI || 0).toFixed(2)} A` : "—", warn: (r.batt.eodI || 0) > p.maxCellI * p.parallelP, tip: tipBattEodI() },
+            ]} />
+            <DataCard title={p.dcOutput ? "DC Output" : "Output (Load)"} color={p.dcOutput ? C.dcBus : C.outputPath} rows={[
+              { label: "Voltage", value: `${(r.inv.voltage || 0).toFixed(1)} V`, tip: tipInvV() },
+              { label: "Current", value: `${(r.inv.current || 0).toFixed(2)} A`, warn: r.warnings.some(w => w.includes("Output CB")), tip: tipInvI() },
+              { label: "Real Power", value: `${(r.inv.power || 0).toFixed(1)} W`, tip: tipInvP() },
+              { label: "Apparent", value: `${(r.inv.va || 0).toFixed(0)} VA`, tip: tipInvVA() },
+            ]} />
+            <DataCard title="Protection" color={C.fuse} rows={[
+              { label: `Input CB (${p.inputCB}A)`, value: `${(r.inputI || 0).toFixed(2)} A`, warn: r.warnings.some(w => w.includes("Input CB")), tip: tipInputCB() },
+              { label: `Output CB (${p.outputCB}A)`, value: `${(r.inv.current || 0).toFixed(2)} A`, warn: r.warnings.some(w => w.includes("Output CB")), tip: tipOutputCB() },
+              { label: `Boost Fuse F1 (${p.boostFuse}A)`, value: `${(r.boostFuseI || 0).toFixed(2)} A`, warn: r.boostFuseBlown, tip: tipBoostFuse() },
+              { label: `Charger Fuse F2 (${p.chargerFuse}A)`, value: `${(r.chargerFuseI || 0).toFixed(2)} A`, warn: r.chargerFuseBlown, tip: tipChargerFuse() },
+            ]} />
+            <DataCard title="System" color={C.sub} rows={[
+              { label: "Chain Efficiency", value: `${effChain}%`, tip: tipEffChain() },
+              { label: "Heat Dissipated", value: `${(r.thermal.heat || 0).toFixed(1)} W`, tip: tipHeat() },
+              { label: "Required Airflow", value: `${(r.thermal.cfm || 0).toFixed(1)} CFM`, tip: tipCfm() },
+              { label: "ΔT Budget", value: `${(r.thermal.dT || 0).toFixed(0)} °C`, tip: tipDT() },
+            ]} />
+          </div>
+
+          {/* Runtime Graph */}
+          <div style={{ padding: "0 16px 16px" }}>
+            <div style={{ background: C.cardBg, borderRadius: 10, padding: 16 }}>
+              <div style={{ fontSize: 11, fontWeight: 700, color: C.dcBus, letterSpacing: 1, marginBottom: 12 }}>
+                RUNTIME vs LOAD
+              </div>
+              <RuntimeChart data={graphData} highlight={calcResult} />
+
+              {/* Runtime Calculator */}
+              <div style={{ marginTop: 12, padding: 12, background: C.inputBg, borderRadius: 8,
+                border: `1px solid ${C.border}` }}>
+                <div style={{ fontSize: 10, fontWeight: 700, color: C.sub, letterSpacing: 1, marginBottom: 8 }}>
+                  RUNTIME CALCULATOR
+                </div>
+                <div style={{ display: "flex", gap: 8, alignItems: "end" }}>
+                  <div style={{ flex: 1 }}>
+                    <label style={{ display: "block", fontSize: 9, color: C.muted, marginBottom: 2 }}>Load Value</label>
+                    <input type="number" value={calcLoad} placeholder="e.g. 500"
+                      onChange={e => setCalcLoad(e.target.value)}
+                      style={{ width: "100%", background: C.cardBg, border: `1px solid ${C.border}`, borderRadius: 4,
+                        padding: "5px 8px", color: C.text, fontSize: 12, outline: "none",
+                        fontFamily: "'JetBrains Mono', monospace" }} />
+                  </div>
+                  <div style={{ width: 90 }}>
+                    <label style={{ display: "block", fontSize: 9, color: C.muted, marginBottom: 2 }}>Unit</label>
+                    <select value={calcUnit} onChange={e => setCalcUnit(e.target.value)}
+                      style={{ width: "100%", background: C.cardBg, border: `1px solid ${C.border}`, borderRadius: 4,
+                        padding: "5px 8px", color: C.text, fontSize: 12, outline: "none",
+                        fontFamily: "'JetBrains Mono', monospace" }}>
+                      <option value="watts">W</option>
+                      <option value="percent">%</option>
+                    </select>
+                  </div>
+                  <button onClick={() => { setCalcLoad(""); }}
+                    style={{ padding: "5px 12px", background: C.warn + "33", color: C.warn, border: `1px solid ${C.warn}44`,
+                      borderRadius: 4, cursor: "pointer", fontSize: 10, fontWeight: 700,
+                      fontFamily: "'JetBrains Mono', monospace" }}>CLR</button>
+                </div>
+                {calcResult && (
+                  <div style={{ marginTop: 8, padding: 8, background: C.cardBg, borderRadius: 6,
+                    border: `1px solid ${C.acPath}44`, fontSize: 12 }}>
+                    <span style={{ color: C.acPath, fontWeight: 700 }}>Runtime: </span>
+                    <span style={{ color: C.text, fontWeight: 700 }}>
+                      {calcResult.runtime.toFixed(1)} min at {calcResult.load.toFixed(0)}W
+                    </span>
+                    {calcResult.runtime >= 60 && (
+                      <span style={{ color: C.sub, marginLeft: 8 }}>
+                        ({(calcResult.runtime / 60).toFixed(1)} hrs)
+                      </span>
+                    )}
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      </>}
+
+      {/* ════ PRINT VIEW TAB ════ */}
+      {activeTab === "print" && (
+        <div className="print-area" style={{ padding: 24, background: C.bg }}>
+          {/* Print-only header */}
+          <div className="print-header" style={{ display: "none" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 8 }}>
+              <div style={{ fontSize: 18, fontWeight: 800, color: C.text, letterSpacing: 2 }}>UPS SYSTEM CALCULATOR</div>
+            </div>
+            <div style={{ fontSize: 10, color: C.sub, marginBottom: 4 }}>
+              Topology: {p.wrpfc ? "WRPFC (No Transformer)" : "Transformer + PFC"} · {p.dcOutput ? `DC/DC Output (${p.dcOutV}V)` : "Inverter Output"}
+            </div>
+            <div style={{ fontSize: 10, color: C.sub, marginBottom: 4 }}>
+              Load: {p.loadW}W · Battery: {(p.cellV * p.seriesS).toFixed(1)}V ({p.seriesS}S{p.parallelP}P) · {(p.cellAh * p.parallelP).toFixed(0)}Ah · Runtime: {calcRuntime(p, p.loadW).toFixed(1)} min
+            </div>
+            <hr style={{ border: "none", borderTop: `2px solid ${C.border}`, marginBottom: 16 }} />
+          </div>
+
+          {/* Config summary bar */}
+          <div style={{ background: C.cardBg, borderRadius: 8, padding: "10px 16px", marginBottom: 16,
+            border: `1px solid ${C.border}`, display: "flex", flexWrap: "wrap", gap: 24, fontSize: 11, color: C.text,
+            fontFamily: "'JetBrains Mono', monospace" }}>
+            <div><span style={{ color: C.sub }}>Input:</span> {(p.lowLine ? p.gridV * (1 - p.vTol / 100) : p.gridV).toFixed(0)}V {p.phase === "three" ? "3Φ" : "1Φ"}</div>
+            <div><span style={{ color: C.sub }}>Output:</span> {p.dcOutput ? `${p.dcOutV}V DC` : `${p.outV}V AC`}</div>
+            <div><span style={{ color: C.sub }}>Load:</span> {p.loadW}W</div>
+            <div><span style={{ color: C.sub }}>Battery:</span> {(p.cellV * p.seriesS).toFixed(1)}V · {p.seriesS}S{p.parallelP}P · {(p.cellAh * p.parallelP).toFixed(0)}Ah</div>
+            <div><span style={{ color: C.sub }}>CB:</span> In {p.inputCB}A / Out {p.outputCB}A</div>
+            <div><span style={{ color: C.sub }}>Fuses:</span> F1 {p.boostFuse}A / F2 {p.chargerFuse}A</div>
+            <div><span style={{ color: C.sub }}>Runtime:</span> {calcRuntime(p, p.loadW).toFixed(1)} min</div>
+          </div>
+
+          {/* All modes grid */}
+          <div style={{ display: "grid", gridTemplateColumns: modes.length <= 3 ? "1fr" : "1fr 1fr", gap: 16 }}>
+            {allResults.map(({ mode: m, results: mr }) => (
+              <div key={m} style={{ background: C.cardBg, borderRadius: 10, border: `1px solid ${MODE_COLORS[m]}44`,
+                overflow: "hidden" }}>
+                {/* Mode header */}
+                <div style={{ padding: "8px 14px", background: MODE_COLORS[m] + "18",
+                  borderBottom: `1px solid ${MODE_COLORS[m]}33`, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                  <div style={{ fontSize: 13, fontWeight: 800, color: MODE_COLORS[m], letterSpacing: 1.5,
+                    fontFamily: "'JetBrains Mono', monospace" }}>
+                    {MODE_LABELS[m].toUpperCase()} MODE
+                  </div>
+                  <div style={{ fontSize: 9, color: C.sub, fontFamily: "'JetBrains Mono', monospace" }}>
+                    {mr.warnings.length > 0 ? `⚠ ${mr.warnings.length} warning${mr.warnings.length > 1 ? "s" : ""}` : "✓ OK"}
+                  </div>
+                </div>
+                {/* Diagram */}
+                <div style={{ padding: "8px 8px 0" }}>
+                  <Diagram mode={m} results={mr} params={p} isPrint={true} />
+                </div>
+                {/* Warnings for this mode */}
+                {mr.warnings.length > 0 && (
+                  <div style={{ padding: "4px 14px 8px" }}>
+                    {mr.warnings.map((w, wi) => (
+                      <div key={wi} style={{ fontSize: 9, color: C.warn, padding: "1px 0",
+                        fontFamily: "'JetBrains Mono', monospace" }}>⚠ {w}</div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+
+          {/* Print styles */}
+          <style>{`
+            @media print {
+              body { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; color-adjust: exact !important; }
+              .no-print { display: none !important; }
+              .print-header { display: block !important; }
+              .print-area { padding: 8px !important; }
+              .print-area svg { border-radius: 0 !important; }
+              @page { size: landscape; margin: 0.4in; }
             }
+          `}</style>
+        </div>
+      )}
+    </div>
+  );
+}
 
-            // Common battery display
-            results.battery.voltage = batteryVoltage;
-            results.battery.capacity = batteryCapacity;
-            results.battery.maxCurrent = batteryMaxCurrent;
 
-            // Circuit Breaker Checks
-            checkCircuitBreakers(inputs, results);
-
-            state.warnings = results.warnings;
-            
-            // Calculate thermal dissipation
-            calculateThermalLoad(inputs, results);
-            
-            return results;
-        }
-
-        function calculateThermalLoad(inputs, results) {
-            let totalHeatDissipated = 0;
-            
-            // Calculate heat from each component based on inefficiency
-            // Transformer heat
-            if (results.pfcInput.power > 0) {
-                const transformerInputPower = results.pfcInput.power / (inputs.transformerEff / 100);
-                const transformerHeat = transformerInputPower - results.pfcInput.power;
-                totalHeatDissipated += transformerHeat;
-            }
-            
-            // PFC heat
-            if (results.dcBus.power > 0 && results.pfcInput.power > 0) {
-                const pfcHeat = results.pfcInput.power - results.dcBus.power;
-                totalHeatDissipated += pfcHeat;
-            }
-            
-            // Inverter heat
-            if (results.inverterOutput.power > 0 && results.dcBus.power > 0) {
-                const inverterInputPower = results.inverterOutput.power / (inputs.inverterEff / 100);
-                const inverterHeat = inverterInputPower - results.inverterOutput.power;
-                totalHeatDissipated += inverterHeat;
-            }
-            
-            // Charger heat (in charging mode)
-            if (results.battery.chargingPower > 0) {
-                const chargerInputPower = results.battery.chargingPower / (inputs.chargerEff / 100);
-                const chargerHeat = chargerInputPower - results.battery.chargingPower;
-                totalHeatDissipated += chargerHeat;
-            }
-            
-            // Boost converter heat (in battery mode)
-            if (state.mode === 'battery' && results.battery.power > 0) {
-                const boostOutputPower = results.battery.power * (inputs.boostEff / 100);
-                const boostHeat = results.battery.power - boostOutputPower;
-                totalHeatDissipated += boostHeat;
-            }
-            
-            // Calculate required CFM using thermal formula: CFM = (3.16 × P) / ΔT
-            const deltaT = inputs.maxInternalTemp - inputs.ambientTemp;
-            const requiredCFM = deltaT > 0 ? (3.16 * totalHeatDissipated) / deltaT : 0;
-            
-            // Store thermal results with formula
-            results.thermal = {
-                heatDissipated: totalHeatDissipated,
-                requiredCFM: requiredCFM,
-                deltaT: deltaT,
-                requiredCFMFormula: `(3.16 × ${totalHeatDissipated.toFixed(1)}W) / ${deltaT}°C`
-            };
-        }
-
-        function calculateNormalMode(inputs, results) {
-            // Grid → Transformer → PFC → DC Bus → Inverter → Load
-            const phaseFactor = getPhaseFactor(inputs);
-            
-            // Transformer output
-            const transformerVoltage = inputs.gridVoltage * inputs.turnsRatio;
-            const transformerPower = inputs.loadPower / (inputs.inverterEff / 100) / (inputs.pfcEff / 100);
-            const transformerCurrent = transformerPower / (phaseFactor * transformerVoltage);
-            
-            // PFC Input (Post-Transformer)
-            results.pfcInput.voltage = transformerVoltage;
-            results.pfcInput.current = transformerCurrent;
-            results.pfcInput.power = transformerPower;
-            
-            // Input current (Pre-Transformer)
-            results.inputCurrent = transformerPower / (inputs.transformerEff / 100) / (phaseFactor * inputs.gridVoltage);
-            
-            // DC Bus
-            results.dcBus.voltage = DC_BUS_VOLTAGE;
-            const dcBusPower = transformerPower * (inputs.pfcEff / 100);
-            results.dcBus.current = dcBusPower / DC_BUS_VOLTAGE;
-            results.dcBus.power = dcBusPower;
-            
-            // Inverter Output
-            results.inverterOutput.power = inputs.loadPower;
-            results.inverterOutput.voltage = inputs.outputVoltage;
-            
-            // Calculate current and VA based on reactive load toggle
-            if (inputs.reactiveLoadEnabled) {
-                // Use VA rating as apparent power (maximum reactive scenario)
-                const apparentPower = inputs.outputVA;
-                // Check if real power exceeds VA rating
-                if (inputs.loadPower > apparentPower) {
-                    results.warnings.push({
-                        type: 'va',
-                        message: `POWER EXCEEDS VA RATING: ${inputs.loadPower}W exceeds ${apparentPower}VA rating`
-                    });
-                }
-                // Current is based on apparent power: I = S / V
-                results.inverterOutput.current = apparentPower / inputs.outputVoltage;
-                results.inverterOutput.apparentPower = apparentPower;
-            } else {
-                // Resistive load: VA = W (PF = 1.0)
-                results.inverterOutput.current = inputs.loadPower / inputs.outputVoltage;
-                results.inverterOutput.apparentPower = inputs.loadPower;
-            }
-            
-            // Battery (not active in normal mode)
-            results.battery.current = 0;
-            results.battery.power = 0;
-        }
-
-        function calculateChargingMode(inputs, results, batteryVoltage) {
-            // Normal mode + charging
-            calculateNormalMode(inputs, results);
-            const phaseFactor = getPhaseFactor(inputs);
-            
-            // Calculate charging current based on charger max power and end of discharge voltage
-            // Assume current limit based on end of discharge voltage
-            const chargingPower = inputs.chargerMaxPower;
-            const maxChargingCurrent = chargingPower / inputs.endOfDischargeVoltage;
-            
-            // Actual charging current at current battery voltage
-            const actualChargingCurrent = Math.min(maxChargingCurrent, chargingPower / batteryVoltage);
-            const actualChargingPowerAtBattery = actualChargingCurrent * batteryVoltage;
-            
-            // Power at charger input (accounting for efficiency)
-            const chargerInputPower = actualChargingPowerAtBattery / (inputs.chargerEff / 100);
-            
-            results.battery.current = actualChargingCurrent;
-            results.battery.power = actualChargingPowerAtBattery;
-            results.battery.chargingPower = actualChargingPowerAtBattery;
-            
-            // Store charger power for formula display
-            results.charger = {
-                power: chargerInputPower
-            };
-            
-            // Adjust DC Bus current to include charging
-            results.dcBus.current += chargerInputPower / DC_BUS_VOLTAGE;
-            results.dcBus.power += chargerInputPower;
-            
-            // Update PFC input to account for charging power
-            const additionalInputPower = chargerInputPower / (inputs.pfcEff / 100);
-            results.pfcInput.power += additionalInputPower;
-            results.pfcInput.current = results.pfcInput.power / (phaseFactor * results.pfcInput.voltage);
-            
-            // Update input current to account for charging power
-            results.inputCurrent = results.pfcInput.power / (inputs.transformerEff / 100) / (phaseFactor * inputs.gridVoltage);
-        }
-
-        function calculateBatteryMode(inputs, results, batteryVoltage, minBatteryVoltage, batteryMaxCurrent) {
-            // Battery → Boost → DC Bus → Inverter → Load
-            
-            // Calculate required power at battery considering all losses
-            const inverterInputPower = inputs.loadPower / (inputs.inverterEff / 100);
-            const boostInputPower = inverterInputPower / (inputs.boostEff / 100);
-            
-            // Battery output
-            results.battery.current = boostInputPower / batteryVoltage;
-            results.battery.power = boostInputPower;
-            
-            // DC Bus
-            results.dcBus.voltage = DC_BUS_VOLTAGE;
-            results.dcBus.current = inverterInputPower / DC_BUS_VOLTAGE;
-            results.dcBus.power = inverterInputPower;
-            
-            // Inverter Output with reactive load consideration
-            results.inverterOutput.power = inputs.loadPower;
-            results.inverterOutput.voltage = inputs.outputVoltage;
-            
-            if (inputs.reactiveLoadEnabled) {
-                const apparentPower = inputs.outputVA;
-                if (inputs.loadPower > apparentPower) {
-                    results.warnings.push({
-                        type: 'va',
-                        message: `POWER EXCEEDS VA RATING: ${inputs.loadPower}W exceeds ${apparentPower}VA rating`
-                    });
-                }
-                results.inverterOutput.current = apparentPower / inputs.outputVoltage;
-                results.inverterOutput.apparentPower = apparentPower;
-            } else {
-                results.inverterOutput.current = inputs.loadPower / inputs.outputVoltage;
-                results.inverterOutput.apparentPower = inputs.loadPower;
-            }
-            
-            // PFC Input (not active in battery mode)
-            results.pfcInput.voltage = 0;
-            results.pfcInput.current = 0;
-            results.pfcInput.power = 0;
-            results.inputCurrent = 0;
-            
-            // END-OF-DISCHARGE CHECK using custom end of discharge voltage
-            const endOfDischargeCurrentRequired = boostInputPower / inputs.endOfDischargeVoltage;
-            if (endOfDischargeCurrentRequired > batteryMaxCurrent) {
-                results.warnings.push({
-                    type: 'critical',
-                    message: `CRITICAL: DISCHARGE CURRENT EXCEEDS RATING (${endOfDischargeCurrentRequired.toFixed(2)}A required at end-of-discharge vs ${batteryMaxCurrent.toFixed(2)}A max)`
-                });
-            }
-        }
-
-        function calculateBypassMode(inputs, results) {
-            // Grid → Transformer → Bypass → Load (direct)
-            const phaseFactor = getPhaseFactor(inputs);
-            results.inverterOutput.power = inputs.loadPower;
-            results.inverterOutput.voltage = inputs.outputVoltage;
-            
-            if (inputs.reactiveLoadEnabled) {
-                const apparentPower = inputs.outputVA;
-                if (inputs.loadPower > apparentPower) {
-                    results.warnings.push({
-                        type: 'va',
-                        message: `POWER EXCEEDS VA RATING: ${inputs.loadPower}W exceeds ${apparentPower}VA rating`
-                    });
-                }
-                results.inverterOutput.current = apparentPower / inputs.outputVoltage;
-                results.inverterOutput.apparentPower = apparentPower;
-            } else {
-                results.inverterOutput.current = inputs.loadPower / inputs.outputVoltage;
-                results.inverterOutput.apparentPower = inputs.loadPower;
-            }
-            
-            const inputApparentPower = results.inverterOutput.apparentPower;
-            results.inputCurrent = inputApparentPower / (inputs.transformerEff / 100) / (phaseFactor * inputs.gridVoltage);
-            
-            // Other components not active
-            results.pfcInput.voltage = 0;
-            results.pfcInput.current = 0;
-            results.pfcInput.power = 0;
-            results.dcBus.voltage = 0;
-            results.dcBus.current = 0;
-            results.dcBus.power = 0;
-            results.battery.current = 0;
-            results.battery.power = 0;
-        }
-
-        function checkCircuitBreakers(inputs, results) {
-            // Input Circuit Breaker
-            if (results.inputCurrent && results.inputCurrent > inputs.inputCB) {
-                results.warnings.push({
-                    type: 'breaker',
-                    message: `INPUT BREAKER TRIP: ${results.inputCurrent.toFixed(2)}A exceeds ${inputs.inputCB}A rating`
-                });
-                results.inputBreakerTrip = true;
-            }
-            
-            // Output Circuit Breaker
-            if (results.inverterOutput.current > inputs.outputCB) {
-                results.warnings.push({
-                    type: 'breaker',
-                    message: `OUTPUT BREAKER TRIP: ${results.inverterOutput.current.toFixed(2)}A exceeds ${inputs.outputCB}A rating`
-                });
-                results.outputBreakerTrip = true;
-            }
-        }
-
-        function getInputs() {
-            const baseGridVoltage = parseFloat(document.getElementById('gridVoltage').value) || 115;
-            const voltageTolerance = parseFloat(document.getElementById('voltageTolerance').value) || 15;
-            const lowLineMode = document.getElementById('lowLineMode').checked;
-            const baseLoadPower = parseFloat(document.getElementById('loadPower').value) || 1000;
-            const overloadPercent = parseFloat(document.getElementById('overloadPercent').value) || 0;
-            const overloadMode = document.getElementById('overloadMode').checked;
-            
-            // Apply low line voltage reduction if enabled
-            const gridVoltage = lowLineMode ? baseGridVoltage * (1 - voltageTolerance / 100) : baseGridVoltage;
-            
-            // Apply overload if enabled
-            const loadPower = overloadMode ? baseLoadPower * (1 + overloadPercent / 100) : baseLoadPower;
-            
-            return {
-                gridVoltage: gridVoltage,
-                loadPower: loadPower,
-                baseGridVoltage: baseGridVoltage,
-                baseLoadPower: baseLoadPower,
-                inputPhase: document.getElementById('inputPhase').value,
-                outputVoltage: parseFloat(document.getElementById('outputVoltage').value) || 115,
-                voltageTolerance: voltageTolerance,
-                lowLineMode: lowLineMode,
-                overloadPercent: overloadPercent,
-                overloadMode: overloadMode,
-                turnsRatio: parseFloat(document.getElementById('turnsRatio').value) || 1.0,
-                transformerEff: parseFloat(document.getElementById('transformerEff').value) || 95,
-                pfcEff: parseFloat(document.getElementById('pfcEff').value) || 92,
-                inverterEff: parseFloat(document.getElementById('inverterEff').value) || 90,
-                chargerEff: parseFloat(document.getElementById('chargerEff').value) || 85,
-                chargerMaxPower: parseFloat(document.getElementById('chargerMaxPower').value) || 200,
-                boostEff: parseFloat(document.getElementById('boostEff').value) || 88,
-                inputCB: parseFloat(document.getElementById('inputCB').value) || 50,
-                outputCB: parseFloat(document.getElementById('outputCB').value) || 40,
-                outputVA: parseFloat(document.getElementById('outputVA').value) || 1200,
-                reactiveLoadEnabled: document.getElementById('reactiveLoadEnabled').checked,
-                cellVoltage: parseFloat(document.getElementById('cellVoltage').value) || 12,
-                minCellVoltage: parseFloat(document.getElementById('minCellVoltage').value) || 10.5,
-                endOfDischargeVoltage: parseFloat(document.getElementById('endOfDischargeVoltage').value) || 105,
-                cellCapacity: parseFloat(document.getElementById('cellCapacity').value) || 10,
-                maxCellCurrent: parseFloat(document.getElementById('maxCellCurrent').value) || 50,
-                seriesCount: parseInt(document.getElementById('seriesCount').value) || 10,
-                parallelCount: parseInt(document.getElementById('parallelCount').value) || 1,
-                peukertCoefficient: parseFloat(document.getElementById('peukertCoefficient').value) || 1.2,
-                graphStartLoad: parseFloat(document.getElementById('graphStartLoad').value) || 0,
-                graphEndLoad: parseFloat(document.getElementById('graphEndLoad').value) || 0,
-                ambientTemp: parseFloat(document.getElementById('ambientTemp').value) || 25,
-                maxInternalTemp: parseFloat(document.getElementById('maxInternalTemp').value) || 40
-            };
-        }
-
-        // ============================================
-        // UI UPDATE FUNCTIONS
-        // ============================================
-        function updateDashboard(results) {
-            const inputs = getInputs();
-            
-            // PFC Input
-            document.getElementById('pfcInputVoltage').textContent = results.pfcInput.voltage.toFixed(2) + ' V';
-            document.getElementById('pfcInputVoltageFormula').textContent = `Grid × Ratio = ${inputs.gridVoltage.toFixed(1)}V × ${inputs.turnsRatio}`;
-            document.getElementById('pfcInputCurrent').textContent = results.pfcInput.current.toFixed(2) + ' A';
-            const phaseLabel = inputs.inputPhase === 'three' ? '√3 × ' : '';
-            document.getElementById('pfcInputCurrentFormula').textContent = `P / (${phaseLabel}V) = ${results.pfcInput.power.toFixed(1)}W / (${phaseLabel}${results.pfcInput.voltage.toFixed(1)}V)`;
-            document.getElementById('pfcInputPower').textContent = results.pfcInput.power.toFixed(2) + ' W';
-            if (state.mode === 'charging' && results.charger) {
-                const inverterPower = inputs.loadPower / (inputs.inverterEff / 100);
-                document.getElementById('pfcInputPowerFormula').textContent = `(${inverterPower.toFixed(1)}W inv + ${results.charger.power.toFixed(1)}W chg) / ${inputs.pfcEff}%`;
-            } else {
-                document.getElementById('pfcInputPowerFormula').textContent = `Load / (ηPFC × ηInv)`;
-            }
-            
-            // DC Bus
-            document.getElementById('dcBusVoltage').textContent = (results.dcBus.voltage || 0).toFixed(2) + ' V';
-            document.getElementById('dcBusCurrent').textContent = (results.dcBus.current || 0).toFixed(2) + ' A';
-            document.getElementById('dcBusCurrentFormula').textContent = `P / 400V = ${(results.dcBus.power || 0).toFixed(1)}W / 400V`;
-            document.getElementById('dcBusPower').textContent = (results.dcBus.power || 0).toFixed(2) + ' W';
-            document.getElementById('dcBusPowerFormula').textContent = `PFC Input × ηPFC`;
-            
-            // Battery
-            document.getElementById('batteryVoltage').textContent = results.battery.voltage.toFixed(2) + ' V';
-            document.getElementById('batteryVoltageFormula').textContent = `${inputs.seriesCount}S × ${inputs.cellVoltage}V/cell`;
-            document.getElementById('batteryCurrent').textContent = (results.battery.current || 0).toFixed(2) + ' A';
-            if (state.mode === 'charging') {
-                document.getElementById('batteryCurrentFormula').textContent = `Charging: ${inputs.chargerMaxPower}W / ${results.battery.voltage.toFixed(1)}V`;
-            } else if (state.mode === 'battery') {
-                document.getElementById('batteryCurrentFormula').textContent = `Discharging: P / V`;
-            } else {
-                document.getElementById('batteryCurrentFormula').textContent = `Idle`;
-            }
-            document.getElementById('batteryPower').textContent = (results.battery.power || 0).toFixed(2) + ' W';
-            document.getElementById('batteryPowerFormula').textContent = `V × I`;
-            
-            // Inverter Output
-            document.getElementById('inverterOutputVoltage').textContent = (results.inverterOutput.voltage || 0).toFixed(2) + ' V';
-            document.getElementById('inverterOutputCurrent').textContent = (results.inverterOutput.current || 0).toFixed(2) + ' A';
-            document.getElementById('inverterOutputCurrentFormula').textContent = inputs.reactiveLoadEnabled ? 
-                `S / V = ${inputs.outputVA}VA / ${(results.inverterOutput.voltage || 0).toFixed(1)}V` :
-                `P / V = ${(results.inverterOutput.power || 0).toFixed(1)}W / ${(results.inverterOutput.voltage || 0).toFixed(1)}V`;
-            document.getElementById('inverterOutputPower').textContent = (results.inverterOutput.power || 0).toFixed(2) + ' W';
-            document.getElementById('apparentPower').textContent = (results.inverterOutput.apparentPower || 0).toFixed(0) + ' VA';
-            document.getElementById('apparentPowerFormula').textContent = inputs.reactiveLoadEnabled ? 
-                `VA rating (${inputs.outputVA}VA)` : `= Power (PF=1.0)`;
-            
-            // Thermal Analysis
-            if (results.thermal) {
-                document.getElementById('heatDissipated').textContent = results.thermal.heatDissipated.toFixed(2) + ' W';
-                document.getElementById('requiredCFM').textContent = results.thermal.requiredCFM.toFixed(1) + ' CFM';
-                document.getElementById('requiredCFMFormula').textContent = results.thermal.requiredCFMFormula;
-            }
-        }
-
-        function updateWarnings(warnings) {
-            const banner = document.getElementById('warningBanner');
-            
-            if (warnings.length === 0) {
-                banner.classList.remove('active');
-                banner.innerHTML = '';
-            } else {
-                banner.classList.add('active');
-                banner.innerHTML = warnings.map(w => 
-                    `<div class="warning-item">⚠️ ${w.message}</div>`
-                ).join('');
-            }
-        }
-
-        // ============================================
-        // CANVAS DIAGRAM WITH PARTICLE ANIMATION
-        // ============================================
-        const diagramCanvas = document.getElementById('diagramCanvas');
-        const diagramCtx = diagramCanvas.getContext('2d');
-
-        function resizeDiagramCanvas() {
-            const rect = diagramCanvas.getBoundingClientRect();
-            diagramCanvas.width = rect.width;
-            diagramCanvas.height = rect.height;
-        }
-
-        // Component positions (as percentages of canvas size)
-        const components = {
-            grid: { x: 0.05, y: 0.5, w: 0.08, h: 0.12, label: 'Grid' },
-            inputCB: { x: 0.15, y: 0.5, w: 0.06, h: 0.08, label: 'Input CB' },
-            transformer: { x: 0.24, y: 0.5, w: 0.1, h: 0.12, label: 'Transformer' },
-            bypass: { x: 0.49, y: 0.15, w: 0.1, h: 0.1, label: 'Bypass Switch' },
-            pfc: { x: 0.37, y: 0.5, w: 0.1, h: 0.12, label: 'PFC' },
-            dcBus: { x: 0.5, y: 0.5, w: 0.08, h: 0.15, label: 'DC Bus\n400V' },
-            inverter: { x: 0.61, y: 0.5, w: 0.1, h: 0.12, label: 'Inverter' },
-            outputCB: { x: 0.74, y: 0.5, w: 0.06, h: 0.08, label: 'Output CB' },
-            load: { x: 0.83, y: 0.5, w: 0.12, h: 0.12, label: 'Load' },
-            battery: { x: 0.49, y: 0.75, w: 0.1, h: 0.1, label: 'Battery' },
-            charger: { x: 0.46, y: 0.65, w: 0.06, h: 0.06, label: 'Charger' },
-            boost: { x: 0.56, y: 0.65, w: 0.06, h: 0.06, label: 'Boost' }
-        };
-
-        // Energy flow paths for each mode
-        const flowPaths = {
-            normal: [
-                ['grid', 'inputCB', 'transformer', 'pfc', 'dcBus', 'inverter', 'outputCB', 'load']
-            ],
-            charging: [
-                ['grid', 'inputCB', 'transformer', 'pfc', 'dcBus', 'inverter', 'outputCB', 'load'],
-                ['dcBus', 'charger', 'battery']
-            ],
-            battery: [
-                ['battery', 'boost', 'dcBus', 'inverter', 'outputCB', 'load']
-            ],
-            bypass: [
-                ['grid', 'inputCB', 'transformer', 'bypass', 'outputCB', 'load']
-            ]
-        };
-
-        class Particle {
-            constructor(path, pathIndex) {
-                this.path = path;
-                this.pathIndex = pathIndex;
-                this.progress = Math.random(); // 0 to 1
-                this.speed = 0.003 + Math.random() * 0.002;
-                this.size = 4 + Math.random() * 3;
-            }
-
-            update() {
-                this.progress += this.speed;
-                if (this.progress > 1) {
-                    this.progress = 0;
-                }
-            }
-
-            draw(ctx, canvas) {
-                const segmentIndex = Math.floor(this.progress * (this.path.length - 1));
-                const segmentProgress = (this.progress * (this.path.length - 1)) % 1;
-                
-                const from = components[this.path[segmentIndex]];
-                const to = components[this.path[segmentIndex + 1]];
-                
-                if (!from || !to) return;
-                
-                const x1 = from.x * canvas.width + (from.w * canvas.width) / 2;
-                const y1 = from.y * canvas.height;
-                const x2 = to.x * canvas.width + (to.w * canvas.width) / 2;
-                const y2 = to.y * canvas.height;
-                
-                const x = x1 + (x2 - x1) * segmentProgress;
-                const y = y1 + (y2 - y1) * segmentProgress;
-                
-                // Glow effect
-                const gradient = ctx.createRadialGradient(x, y, 0, x, y, this.size * 3);
-                
-                // Color based on mode
-                let color;
-                switch(state.mode) {
-                    case 'normal': color = '76, 255, 76'; break;
-                    case 'charging': color = '100, 149, 237'; break;
-                    case 'battery': color = '255, 215, 0'; break;
-                    case 'bypass': color = '255, 255, 255'; break;
-                    default: color = '76, 255, 76';
-                }
-                
-                gradient.addColorStop(0, `rgba(${color}, 1)`);
-                gradient.addColorStop(0.4, `rgba(${color}, 0.6)`);
-                gradient.addColorStop(1, `rgba(${color}, 0)`);
-                
-                ctx.shadowBlur = 15;
-                ctx.shadowColor = `rgba(${color}, 0.8)`;
-                ctx.fillStyle = gradient;
-                ctx.beginPath();
-                ctx.arc(x, y, this.size, 0, Math.PI * 2);
-                ctx.fill();
-                ctx.shadowBlur = 0;
-            }
-        }
-
-        function initParticles() {
-            state.particles = [];
-            const paths = flowPaths[state.mode];
-            const particlesPerPath = 12;
-            
-            paths.forEach((path, pathIndex) => {
-                for (let i = 0; i < particlesPerPath; i++) {
-                    state.particles.push(new Particle(path, pathIndex));
-                }
-            });
-        }
-
-        function drawComponent(ctx, canvas, comp, label, isTripped = false) {
-            const x = comp.x * canvas.width;
-            const y = comp.y * canvas.height - (comp.h * canvas.height) / 2;
-            const w = comp.w * canvas.width;
-            const h = comp.h * canvas.height;
-            
-            // Component box
-            ctx.fillStyle = isTripped ? '#ff4444' : '#34495e';
-            ctx.strokeStyle = isTripped ? '#cc0000' : '#2c3e50';
-            ctx.lineWidth = 2;
-            ctx.fillRect(x, y, w, h);
-            ctx.strokeRect(x, y, w, h);
-            
-            // Label
-            ctx.fillStyle = 'white';
-            ctx.font = 'bold 12px Arial';
-            ctx.textAlign = 'center';
-            ctx.textBaseline = 'middle';
-            
-            const lines = label.split('\n');
-            lines.forEach((line, i) => {
-                ctx.fillText(line, x + w/2, y + h/2 + (i - lines.length/2 + 0.5) * 14);
-            });
-        }
-
-        function drawConnections(ctx, canvas) {
-            const paths = flowPaths[state.mode];
-            ctx.strokeStyle = '#95a5a6';
-            ctx.lineWidth = 2;
-            ctx.setLineDash([5, 5]);
-            
-            paths.forEach(path => {
-                for (let i = 0; i < path.length - 1; i++) {
-                    const from = components[path[i]];
-                    const to = components[path[i + 1]];
-                    
-                    const x1 = from.x * canvas.width + (from.w * canvas.width) / 2;
-                    const y1 = from.y * canvas.height;
-                    const x2 = to.x * canvas.width + (to.w * canvas.width) / 2;
-                    const y2 = to.y * canvas.height;
-                    
-                    ctx.beginPath();
-                    ctx.moveTo(x1, y1);
-                    ctx.lineTo(x2, y2);
-                    ctx.stroke();
-                }
-            });
-            
-            ctx.setLineDash([]);
-        }
-
-        function drawDiagram(results) {
-            const canvas = diagramCanvas;
-            const ctx = diagramCtx;
-            
-            // Clear canvas
-            ctx.fillStyle = '#ecf0f1';
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
-            
-            // Draw connections
-            drawConnections(ctx, canvas);
-            
-            // Draw particles
-            state.particles.forEach(p => {
-                p.update();
-                p.draw(ctx, canvas);
-            });
-            
-            // Draw components
-            drawComponent(ctx, canvas, components.grid, 'Grid');
-            drawComponent(ctx, canvas, components.inputCB, 'Input CB', results.inputBreakerTrip);
-            drawComponent(ctx, canvas, components.transformer, 'Transformer');
-            drawComponent(ctx, canvas, components.bypass, 'Bypass\nSwitch');
-            drawComponent(ctx, canvas, components.pfc, 'PFC');
-            drawComponent(ctx, canvas, components.dcBus, 'DC Bus\n400V');
-            drawComponent(ctx, canvas, components.inverter, 'Inverter');
-            drawComponent(ctx, canvas, components.outputCB, 'Output CB', results.outputBreakerTrip);
-            drawComponent(ctx, canvas, components.load, 'Load');
-            drawComponent(ctx, canvas, components.battery, 'Battery');
-            drawComponent(ctx, canvas, components.charger, 'Charger');
-            drawComponent(ctx, canvas, components.boost, 'Boost');
-        }
-
-        // ============================================
-        // RUNTIME GRAPH
-        // ============================================
-        const graphCanvas = document.getElementById('graphCanvas');
-        const graphCtx = graphCanvas.getContext('2d');
-
-        function resizeGraphCanvas() {
-            const rect = graphCanvas.getBoundingClientRect();
-            graphCanvas.width = rect.width;
-            graphCanvas.height = rect.height;
-        }
-
-        function drawRuntimeGraph() {
-            const canvas = graphCanvas;
-            const ctx = graphCtx;
-            const inputs = getInputs();
-            
-            // Clear canvas
-            ctx.fillStyle = 'white';
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
-            
-            // Calculate battery specs
-            const batteryVoltage = inputs.cellVoltage * inputs.seriesCount;
-            const batteryCapacity = inputs.cellCapacity * inputs.parallelCount; // Ah
-            const minBatteryVoltage = inputs.minCellVoltage * inputs.seriesCount;
-            const endOfDischargeVoltage = Math.min(Math.max(inputs.endOfDischargeVoltage, minBatteryVoltage), batteryVoltage);
-            const usableCapacityFactor = (batteryVoltage - endOfDischargeVoltage) / Math.max(batteryVoltage - minBatteryVoltage, 1e-6);
-            
-            // Efficiency chain for battery mode
-            const totalEfficiency = (inputs.boostEff / 100) * (inputs.inverterEff / 100);
-            
-            // Peukert effect parameters
-            // Assume rated discharge is at C/20 rate (capacity / 20)
-            const ratedDischargeCurrent = batteryCapacity / 20; // A at C/20 rate
-            const peukertN = inputs.peukertCoefficient;
-            
-            // Graph parameters
-            const padding = 60;
-            const graphWidth = canvas.width - 2 * padding;
-            const graphHeight = canvas.height - 2 * padding;
-            
-            // Generate data points with custom load range
-            const currentLoad = inputs.loadPower;
-            const minLoad = inputs.graphStartLoad || Math.max(100, Math.floor(currentLoad * 0.3));
-            const points = [];
-            
-            // Generate points in 100W decrements from target load down to start load
-            for (let load = currentLoad; load >= minLoad; load -= 100) {
-                if (load > 0) {
-                    const dischargeCurrent = (load / totalEfficiency) / batteryVoltage;
-                    const peukertFactor = Math.pow(ratedDischargeCurrent / dischargeCurrent, peukertN - 1);
-                    const effectiveCapacity = batteryCapacity * usableCapacityFactor * peukertFactor;
-                    const runtime = (effectiveCapacity * batteryVoltage * totalEfficiency / load) * 60;
-                    points.push({ load, runtime });
-                }
-            }
-            
-            // Add final point at minLoad if we didn't land exactly on it
-            if (minLoad > 0 && (points.length === 0 || points[points.length - 1].load !== minLoad)) {
-                const dischargeCurrent = (minLoad / totalEfficiency) / batteryVoltage;
-                const peukertFactor = Math.pow(ratedDischargeCurrent / dischargeCurrent, peukertN - 1);
-                const effectiveCapacity = batteryCapacity * usableCapacityFactor * peukertFactor;
-                const runtime = (effectiveCapacity * batteryVoltage * totalEfficiency / minLoad) * 60;
-                points.push({ load: minLoad, runtime });
-            }
-            
-            if (points.length === 0) return; // Safety check
-            
-            // Store points and bounds in state for hover interaction
-            state.graphPoints = points;
-            state.graphBounds = {
-                padding: padding,
-                graphWidth: graphWidth,
-                graphHeight: graphHeight,
-                canvasWidth: canvas.width,
-                canvasHeight: canvas.height
-            };
-            
-            // Find scales using actual point ranges
-            const actualMinLoad = Math.min(...points.map(p => p.load));
-            const actualMaxLoad = Math.max(...points.map(p => p.load));
-            const maxRuntime = Math.max(...points.map(p => p.runtime));
-            
-            // Ensure we have a valid range for scaling
-            const loadRange = actualMaxLoad - actualMinLoad;
-            const xScale = loadRange > 0 ? graphWidth / loadRange : 0;
-            const yScale = maxRuntime > 0 ? graphHeight / maxRuntime : 0;
-            
-            // Draw axes
-            ctx.strokeStyle = '#2c3e50';
-            ctx.lineWidth = 2;
-            ctx.beginPath();
-            ctx.moveTo(padding, padding);
-            ctx.lineTo(padding, canvas.height - padding);
-            ctx.lineTo(canvas.width - padding, canvas.height - padding);
-            ctx.stroke();
-            
-            // Draw grid
-            ctx.strokeStyle = '#e0e0e0';
-            ctx.lineWidth = 1;
-            for (let i = 0; i <= 5; i++) {
-                const y = padding + (graphHeight / 5) * i;
-                ctx.beginPath();
-                ctx.moveTo(padding, y);
-                ctx.lineTo(canvas.width - padding, y);
-                ctx.stroke();
-                
-                const x = padding + (graphWidth / 5) * i;
-                ctx.beginPath();
-                ctx.moveTo(x, padding);
-                ctx.lineTo(x, canvas.height - padding);
-                ctx.stroke();
-            }
-            
-            // Draw labels
-            ctx.fillStyle = '#2c3e50';
-            ctx.font = '12px Arial';
-            ctx.textAlign = 'center';
-            
-            // X-axis labels
-            for (let i = 0; i <= 5; i++) {
-                const load = actualMinLoad + (actualMaxLoad - actualMinLoad) * i / 5;
-                const x = padding + (graphWidth / 5) * i;
-                ctx.fillText(Math.round(load) + 'W', x, canvas.height - padding + 20);
-            }
-            
-            // Y-axis labels
-            ctx.textAlign = 'right';
-            ctx.textBaseline = 'middle';
-            for (let i = 0; i <= 5; i++) {
-                const runtime = maxRuntime * (5 - i) / 5;
-                const y = padding + (graphHeight / 5) * i;
-                ctx.fillText(Math.round(runtime) + ' min', padding - 10, y);
-            }
-            
-            // Axis titles
-            ctx.textAlign = 'center';
-            ctx.textBaseline = 'top';
-            ctx.font = 'bold 14px Arial';
-            ctx.fillText('Load Power (W)', canvas.width / 2, canvas.height - 20);
-            
-            // Draw curve
-            ctx.strokeStyle = '#667eea';
-            ctx.lineWidth = 3;
-            ctx.beginPath();
-            
-            points.forEach((point, i) => {
-                const x = padding + (point.load - actualMinLoad) * xScale;
-                const y = canvas.height - padding - point.runtime * yScale;
-                
-                if (i === 0) {
-                    ctx.moveTo(x, y);
-                } else {
-                    ctx.lineTo(x, y);
-                }
-            });
-            
-            ctx.stroke();
-            
-            // Draw hover indicator if hovering
-            if (state.hoveredPoint) {
-                const hoverX = padding + (state.hoveredPoint.load - actualMinLoad) * xScale;
-                const hoverY = canvas.height - padding - state.hoveredPoint.runtime * yScale;
-                
-                // Draw vertical line
-                ctx.strokeStyle = 'rgba(52, 152, 219, 0.5)';
-                ctx.lineWidth = 1;
-                ctx.setLineDash([5, 5]);
-                ctx.beginPath();
-                ctx.moveTo(hoverX, padding);
-                ctx.lineTo(hoverX, canvas.height - padding);
-                ctx.stroke();
-                ctx.setLineDash([]);
-                
-                // Draw point
-                ctx.fillStyle = '#3498db';
-                ctx.beginPath();
-                ctx.arc(hoverX, hoverY, 5, 0, Math.PI * 2);
-                ctx.fill();
-                
-                // Draw tooltip background
-                const tooltipText = `${state.hoveredPoint.load.toFixed(0)}W, ${state.hoveredPoint.runtime.toFixed(1)} min`;
-                ctx.font = '12px Arial';
-                const textWidth = ctx.measureText(tooltipText).width;
-                const tooltipX = hoverX + 10;
-                const tooltipY = hoverY - 30;
-                const tooltipPadding = 8;
-                
-                ctx.fillStyle = 'rgba(255, 255, 255, 0.95)';
-                ctx.strokeStyle = '#3498db';
-                ctx.lineWidth = 2;
-                ctx.fillRect(tooltipX, tooltipY, textWidth + tooltipPadding * 2, 24);
-                ctx.strokeRect(tooltipX, tooltipY, textWidth + tooltipPadding * 2, 24);
-                
-                // Draw tooltip text
-                ctx.fillStyle = '#2c3e50';
-                ctx.textAlign = 'left';
-                ctx.textBaseline = 'middle';
-                ctx.fillText(tooltipText, tooltipX + tooltipPadding, tooltipY + 12);
-            }
-        }
-
-        // ============================================
-        // ANIMATION LOOP
-        // ============================================
-        function animate() {
-            const results = calculateSystem();
-            drawDiagram(results);
-            updateDashboard(results);
-            updateWarnings(results.warnings);
-            drawRuntimeGraph();
-            
-            state.animationId = requestAnimationFrame(animate);
-        }
-
-        // ============================================
-        // EVENT HANDLERS
-        // ============================================
-        function setupEventListeners() {
-            // Mode buttons
-            document.querySelectorAll('.mode-btn').forEach(btn => {
-                btn.addEventListener('click', () => {
-                    document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
-                    btn.classList.add('active');
-                    state.mode = btn.dataset.mode;
-                    initParticles();
-                });
-            });
-            
-            // Input changes
-            const inputs = document.querySelectorAll('input');
-            inputs.forEach(input => {
-                input.addEventListener('input', () => {
-                    // Recalculation happens in animation loop
-                });
-            });
-            
-            // Window resize
-            window.addEventListener('resize', () => {
-                resizeDiagramCanvas();
-                resizeGraphCanvas();
-            });
-            
-            // Graph canvas mouse interaction
-            graphCanvas.addEventListener('mousemove', (e) => {
-                // Don't override calculator-set hover point
-                if (state.calculatorActive) return;
-                
-                const rect = graphCanvas.getBoundingClientRect();
-                const mouseX = e.clientX - rect.left;
-                const mouseY = e.clientY - rect.top;
-                
-                if (!state.graphPoints || state.graphPoints.length === 0 || !state.graphBounds) {
-                    return;
-                }
-                
-                const { padding, graphWidth, graphHeight, canvasWidth, canvasHeight } = state.graphBounds;
-                
-                // Check if mouse is within graph area
-                if (mouseX < padding || mouseX > canvasWidth - padding || 
-                    mouseY < padding || mouseY > canvasHeight - padding) {
-                    if (state.hoveredPoint) {
-                        state.hoveredPoint = null;
-                    }
-                    return;
-                }
-                
-                // Convert mouse position to load value
-                const actualMinLoad = Math.min(...state.graphPoints.map(p => p.load));
-                const actualMaxLoad = Math.max(...state.graphPoints.map(p => p.load));
-                const xScale = graphWidth / (actualMaxLoad - actualMinLoad);
-                const mouseLoad = actualMinLoad + (mouseX - padding) / xScale;
-                
-                // Find closest point
-                let closestPoint = null;
-                let minDistance = Infinity;
-                
-                state.graphPoints.forEach(point => {
-                    const distance = Math.abs(point.load - mouseLoad);
-                    if (distance < minDistance) {
-                        minDistance = distance;
-                        closestPoint = point;
-                    }
-                });
-                
-                // Only update if point changed
-                if (closestPoint && closestPoint !== state.hoveredPoint) {
-                    state.hoveredPoint = closestPoint;
-                }
-            });
-            
-            graphCanvas.addEventListener('mouseleave', () => {
-                if (!state.calculatorActive) {
-                    state.hoveredPoint = null;
-                }
-            });
-            
-            // Runtime calculator event handlers
-            const runtimeCalcLoad = document.getElementById('runtimeCalcLoad');
-            const runtimeCalcUnit = document.getElementById('runtimeCalcUnit');
-            const clearRuntimeCalc = document.getElementById('clearRuntimeCalc');
-            
-            if (runtimeCalcLoad && runtimeCalcUnit && clearRuntimeCalc) {
-                function updateRuntimeCalculator() {
-                    const loadValue = parseFloat(runtimeCalcLoad.value);
-                    const unit = runtimeCalcUnit.value;
-                    
-                    if (!loadValue || loadValue <= 0) {
-                        state.calculatorActive = false;
-                        state.hoveredPoint = null;
-                        document.getElementById('runtimeCalcResult').style.display = 'none';
-                        return;
-                    }
-                    
-                    const inputs = getInputs();
-                    let targetLoad;
-                    
-                    if (unit === 'percent') {
-                        targetLoad = inputs.loadPower * (loadValue / 100);
-                    } else {
-                        targetLoad = loadValue;
-                    }
-                    
-                    // Calculate runtime for this load
-                    const batteryVoltage = inputs.cellVoltage * inputs.seriesCount;
-                    const batteryCapacity = inputs.cellCapacity * inputs.parallelCount;
-                    const minBatteryVoltage = inputs.minCellVoltage * inputs.seriesCount;
-                    const endOfDischargeVoltage = Math.min(Math.max(inputs.endOfDischargeVoltage, minBatteryVoltage), batteryVoltage);
-                    const usableCapacityFactor = (batteryVoltage - endOfDischargeVoltage) / Math.max(batteryVoltage - minBatteryVoltage, 1e-6);
-                    const totalEfficiency = (inputs.boostEff / 100) * (inputs.inverterEff / 100);
-                    const ratedDischargeCurrent = batteryCapacity / 20;
-                    const peukertN = inputs.peukertCoefficient;
-                    
-                    if (targetLoad > 0) {
-                        const dischargeCurrent = (targetLoad / totalEfficiency) / batteryVoltage;
-                        const peukertFactor = Math.pow(ratedDischargeCurrent / dischargeCurrent, peukertN - 1);
-                        const effectiveCapacity = batteryCapacity * usableCapacityFactor * peukertFactor;
-                        const runtime = (effectiveCapacity * batteryVoltage * totalEfficiency / targetLoad) * 60;
-                        
-                        // Set hover point for graph
-                        state.calculatorActive = true;
-                        state.hoveredPoint = {
-                            load: targetLoad,
-                            runtime: runtime
-                        };
-                        
-                        // Display result
-                        document.getElementById('runtimeCalcResult').style.display = 'block';
-                        document.getElementById('runtimeCalcValue').textContent = 
-                            `${runtime.toFixed(1)} minutes at ${targetLoad.toFixed(0)}W`;
-                    } else {
-                        state.calculatorActive = false;
-                        state.hoveredPoint = null;
-                        document.getElementById('runtimeCalcResult').style.display = 'none';
-                    }
-                }
-                
-                runtimeCalcLoad.addEventListener('input', updateRuntimeCalculator);
-                runtimeCalcUnit.addEventListener('change', updateRuntimeCalculator);
-                
-                clearRuntimeCalc.addEventListener('click', () => {
-                    runtimeCalcLoad.value = '';
-                    state.calculatorActive = false;
-                    state.hoveredPoint = null;
-                    document.getElementById('runtimeCalcResult').style.display = 'none';
-                });
-            }
-        }
-
-        // ============================================
-        // INITIALIZATION
-        // ============================================
-        function init() {
-            resizeDiagramCanvas();
-            resizeGraphCanvas();
-            initParticles();
-            setupEventListeners();
-            animate();
-        }
-
-        // Start the application
-        init();
-    </script>
+ReactDOM.render(<UPSCalculator />, document.getElementById("root"));
+</script>
 </body>
 </html>
